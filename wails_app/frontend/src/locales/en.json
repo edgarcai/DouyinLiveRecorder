@@ -1,0 +1,43 @@
+{
+    "nav": {
+        "status": "Status",
+        "config": "Config",
+        "logs": "Logs"
+    },
+    "status": {
+        "title": "Recording Manager",
+        "placeholder": "Paste Live URL (Douyin/TikTok)...",
+        "start": "Start Recording",
+        "active": "Active Recordings",
+        "empty": "No active recordings. Start one above!",
+        "stop": "Stop"
+    },
+    "config": {
+        "title": "Configuration",
+        "tabs": {
+            "general": "General",
+            "cookies": "Cookies",
+            "push": "Push",
+            "accounts": "Accounts"
+        },
+        "general": {
+            "save_path": "Save Path",
+            "video_quality": "Video Quality",
+            "video_format": "Video Format",
+            "loop_interval": "Loop Interval (s)",
+            "max_threads": "Max Threads",
+            "use_proxy": "Use Proxy",
+            "proxy_addr": "Proxy Address"
+        },
+        "push": {
+            "channels": "Push Channels",
+            "on_start": "Push on Start",
+            "dingtalk_url": "DingTalk URL",
+            "bark_url": "Bark URL"
+        }
+    },
+    "logs": {
+        "title": "System Logs",
+        "clear": "Clear"
+    }
+}
