@@ -38,13 +38,13 @@ func (h *HuyaSpider) SetCookies(cookies string) {
 	h.Cookies = cookies
 }
 
-func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
+func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 	// Logic ported from get_huya_app_stream_url (simpler and more robust than web)
 	// Extract room_id
 	// url format: https://www.huya.com/123456
 	parts := strings.Split(targetUrl, "/")
-	if len(parts) < 1 {
-		return "", fmt.Errorf("invalid huya url")
+	if len(parts) < 2 { // Changed from < 1 to < 2
+		return nil, fmt.Errorf("invalid huya url")
 	}
 	roomId := parts[len(parts)-1]
 	roomId = strings.Split(roomId, "?")[0]
@@ -67,7 +67,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 		req.Header.Set("User-Agent", headers["User-Agent"])
 		resp, err := h.Client.Do(req)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		defer resp.Body.Close()
 		body, _ := io.ReadAll(resp.Body)
@@ -78,7 +78,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 		if len(matches) > 1 {
 			roomId = matches[1]
 		} else {
-			return "", fmt.Errorf("failed to resolve alphanumeric room id")
+			return nil, fmt.Errorf("failed to resolve alphanumeric room id")
 		}
 	}
 
@@ -92,7 +92,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 	apiUrl := fmt.Sprintf("https://mp.huya.com/cache.php?%s", params.Encode())
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -100,38 +100,38 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 
 	resp, err := h.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
-		return "", err
+		return nil, fmt.Errorf("failed to parse stream info: %v", err)
 	}
 
 	data, ok := result["data"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("data not found")
+		return nil, fmt.Errorf("data not found")
 	}
 
 	realLiveStatus, ok := data["realLiveStatus"].(string)
 	if !ok || realLiveStatus != "ON" {
-		return "", fmt.Errorf("stream is not live")
+		return nil, fmt.Errorf("stream is not live")
 	}
 
 	streamObj, ok := data["stream"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("stream info not found")
+		return nil, fmt.Errorf("stream info not found")
 	}
 
 	baseSteamInfoList, ok := streamObj["baseSteamInfoList"].([]interface{})
 	if !ok || len(baseSteamInfoList) == 0 {
-		return "", fmt.Errorf("stream list empty")
+		return nil, fmt.Errorf("stream list empty")
 	}
 
 	// Priority: TX > HW > HS > AL
@@ -140,11 +140,11 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 	var selectedCdnType string
 
 	// Parse all streams
-	type StreamInfo struct {
+	type StreamData struct { // Renamed to avoid conflict with StreamInfo struct
 		CdnType string
 		FlvUrl  string
 	}
-	var streams []StreamInfo
+	var streams []StreamData
 
 	for _, item := range baseSteamInfoList {
 		info := item.(map[string]interface{})
@@ -154,7 +154,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 		flvAntiCode := info["sFlvAntiCode"].(string)
 
 		flvUrl := fmt.Sprintf("%s/%s.flv?%s", sFlvUrl, streamName, flvAntiCode)
-		streams = append(streams, StreamInfo{CdnType: cdnType, FlvUrl: flvUrl})
+		streams = append(streams, StreamData{CdnType: cdnType, FlvUrl: flvUrl})
 	}
 
 	// Select best
@@ -177,7 +177,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 	}
 
 	if selectedFlvUrl == "" {
-		return "", fmt.Errorf("no valid stream found")
+		return nil, fmt.Errorf("no valid stream found")
 	}
 
 	// Fix URL scheme
@@ -197,5 +197,5 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (string, error) {
 		selectedFlvUrl = strings.Replace(selectedFlvUrl, "&fs=bhct", "&fs=bgct", -1)
 	}
 
-	return selectedFlvUrl, nil
+	return &StreamInfo{Url: selectedFlvUrl}, nil
 }

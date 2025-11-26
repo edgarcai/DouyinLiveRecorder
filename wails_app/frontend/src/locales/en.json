@@ -27,7 +27,10 @@
             "loop_interval": "Loop Interval (s)",
             "max_threads": "Max Threads",
             "use_proxy": "Use Proxy",
-            "proxy_addr": "Proxy Address"
+            "proxy_addr": "Proxy Address",
+            "split_recording": "Split Recording",
+            "split_duration": "Split Duration (s)",
+            "generate_subtitles": "Generate Subtitles"
         },
         "push": {
             "channels": "Push Channels",

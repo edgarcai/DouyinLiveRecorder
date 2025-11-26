@@ -39,12 +39,12 @@ func (d *DouyinSpider) SetCookies(cookies string) {
 	d.Cookies = cookies
 }
 
-func (d *DouyinSpider) GetStreamUrl(targetUrl string) (string, error) {
+func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 	// Extract web_rid
 	// url format: https://live.douyin.com/123456
 	parts := strings.Split(targetUrl, "live.douyin.com/")
 	if len(parts) < 2 {
-		return "", fmt.Errorf("invalid douyin url")
+		return nil, fmt.Errorf("invalid douyin url")
 	}
 	webRid := strings.Split(parts[1], "?")[0]
 
@@ -78,7 +78,7 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (string, error) {
 	// Request
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Cookie", cookie)
@@ -86,42 +86,55 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (string, error) {
 
 	resp, err := d.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Parse JSON
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Navigate JSON to find stream URL
 	// data -> data[0] -> stream_url -> flv_pull_url -> FULL_HD1
 	data, ok := result["data"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("invalid response structure: data")
+		return nil, fmt.Errorf("invalid response structure: data")
 	}
 
 	roomDataList, ok := data["data"].([]interface{})
 	if !ok || len(roomDataList) == 0 {
-		return "", fmt.Errorf("room data not found or empty")
+		return nil, fmt.Errorf("room data not found or empty")
 	}
 
 	roomData := roomDataList[0].(map[string]interface{})
 	status := roomData["status"].(float64)
 	if status != 2 {
-		return "", fmt.Errorf("room is not live (status: %v)", status)
+		return nil, fmt.Errorf("room is not live (status: %v)", status)
+	}
+
+	// Extract Metadata
+	title := ""
+	if t, ok := roomData["title"].(string); ok {
+		title = t
+	}
+
+	anchorName := ""
+	if owner, ok := roomData["owner"].(map[string]interface{}); ok {
+		if nickname, ok := owner["nickname"].(string); ok {
+			anchorName = nickname
+		}
 	}
 
 	streamUrlObj, ok := roomData["stream_url"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("stream_url not found")
+		return nil, fmt.Errorf("stream_url not found")
 	}
 
 	// Try to get FLV pull url
@@ -129,7 +142,11 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (string, error) {
 	if ok {
 		// Just pick the first one for now, or "FULL_HD1"
 		for _, v := range flvPullUrl {
-			return v.(string), nil
+			return &StreamInfo{
+				Url:        v.(string),
+				Title:      title,
+				AnchorName: anchorName,
+			}, nil
 		}
 	}
 
@@ -137,11 +154,15 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (string, error) {
 	hlsPullUrlMap, ok := streamUrlObj["hls_pull_url_map"].(map[string]interface{})
 	if ok {
 		for _, v := range hlsPullUrlMap {
-			return v.(string), nil
+			return &StreamInfo{
+				Url:        v.(string),
+				Title:      title,
+				AnchorName: anchorName,
+			}, nil
 		}
 	}
 
-	return "", fmt.Errorf("no stream url found")
+	return nil, fmt.Errorf("no stream url found")
 }
 
 // Helper to extract regex

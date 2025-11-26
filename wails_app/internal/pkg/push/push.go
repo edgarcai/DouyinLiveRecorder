@@ -22,8 +22,9 @@ func NewPushService(cfg *config.PushSettings) *PushService {
 }
 
 func (p *PushService) Send(title, content string) {
-	// Split channels by comma
-	channels := strings.Split(p.config.PushChannels, ",")
+	// Split channels by comma (support both English and Chinese comma)
+	channelsStr := strings.ReplaceAll(p.config.PushChannels, "，", ",")
+	channels := strings.Split(channelsStr, ",")
 	for _, channel := range channels {
 		channel = strings.TrimSpace(channel)
 		switch channel {
@@ -50,28 +51,28 @@ func (p *PushService) DingTalk(title, content string) {
 		return
 	}
 
-	// DingTalk expects markdown or text. Python used text.
-	// Python logic:
-	/*
-	   json_data = {
-	       'msgtype': 'text',
-	       'text': {'content': content},
-	       "at": {"atMobiles": [number], "isAtAll": is_atall},
-	   }
-	*/
+	urlsStr := strings.ReplaceAll(p.config.DingTalkUrl, "，", ",")
+	urls := strings.Split(urlsStr, ",")
 
-	payload := map[string]interface{}{
-		"msgtype": "text",
-		"text": map[string]string{
-			"content": fmt.Sprintf("%s\n%s", title, content),
-		},
-		"at": map[string]interface{}{
-			"atMobiles": []string{p.config.DingTalkPhone},
-			"isAtAll":   p.config.DingTalkAtAll == "是",
-		},
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue
+		}
+
+		payload := map[string]interface{}{
+			"msgtype": "text",
+			"text": map[string]string{
+				"content": fmt.Sprintf("%s\n%s", title, content),
+			},
+			"at": map[string]interface{}{
+				"atMobiles": []string{p.config.DingTalkPhone},
+				"isAtAll":   p.config.DingTalkAtAll == "是",
+			},
+		}
+
+		p.postJson(url, payload)
 	}
-
-	p.postJson(p.config.DingTalkUrl, payload)
 }
 
 func (p *PushService) WeChat(title, content string) {
@@ -79,28 +80,53 @@ func (p *PushService) WeChat(title, content string) {
 	if p.config.WeChatUrl == "" {
 		return
 	}
-	payload := map[string]string{
-		"title":   title,
-		"content": content,
+
+	urlsStr := strings.ReplaceAll(p.config.WeChatUrl, "，", ",")
+	urls := strings.Split(urlsStr, ",")
+
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue
+		}
+		payload := map[string]string{
+			"title":   title,
+			"content": content,
+		}
+		p.postJson(url, payload)
 	}
-	p.postJson(p.config.WeChatUrl, payload)
 }
 
 func (p *PushService) Bark(title, content string) {
 	if p.config.BarkUrl == "" {
 		return
 	}
-	// Bark URL format: https://api.day.app/key/
-	// We can post JSON
-	payload := map[string]interface{}{
-		"title":     title,
-		"body":      content,
-		"level":     p.config.BarkLevel,
-		"sound":     p.config.BarkSound,
-		"autoCopy":  1,
-		"isArchive": 1,
+
+	urlsStr := strings.ReplaceAll(p.config.BarkUrl, "，", ",")
+	urls := strings.Split(urlsStr, ",")
+
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue
+		}
+
+		// Bark URL format: https://api.day.app/key/
+		// We can post JSON
+		payload := map[string]interface{}{
+			"title":     title,
+			"body":      content,
+			"level":     p.config.BarkLevel,
+			"sound":     p.config.BarkSound,
+			"badge":     1,
+			"autoCopy":  1,
+			"isArchive": 1,
+			// "icon": "", // Not in config yet
+			// "group": "", // Not in config yet
+			// "url": "", // Not in config yet
+		}
+		p.postJson(url, payload)
 	}
-	p.postJson(p.config.BarkUrl, payload)
 }
 
 func (p *PushService) Telegram(title, content string) {
@@ -123,10 +149,31 @@ func (p *PushService) Email(title, content string) {
 
 	auth := smtp.PlainAuth("", p.config.EmailAccount, p.config.EmailPassword, p.config.SmtpServer)
 
+	receiversStr := strings.ReplaceAll(p.config.ReceiverEmail, "，", ",")
+	receivers := strings.Split(receiversStr, ",")
+	var validReceivers []string
+	for _, r := range receivers {
+		r = strings.TrimSpace(r)
+		if r != "" {
+			validReceivers = append(validReceivers, r)
+		}
+	}
+
+	if len(validReceivers) == 0 {
+		return
+	}
+
 	// Header
 	header := make(map[string]string)
 	header["From"] = fmt.Sprintf("=?UTF-8?B?%s?= <%s>", base64.StdEncoding.EncodeToString([]byte(p.config.SenderName)), p.config.SenderEmail)
-	header["To"] = p.config.ReceiverEmail
+	// To header usually shows the first receiver or all, but for privacy or simplicity, let's just show the first one or leave it generic if multiple.
+	// Actually, standard practice is to list them or send individual emails.
+	// Python sends one email with multiple recipients in 'To' header if I recall correctly?
+	// Python: message['To'] = receivers[0] if len(receivers) == 1 else ... wait, Python code:
+	// if len(receivers) == 1: message['To'] = receivers[0]
+	// It doesn't set 'To' header for multiple? That might trigger spam filters.
+	// Let's set To to the first one or a string of all.
+	header["To"] = strings.Join(validReceivers, ",")
 	header["Subject"] = fmt.Sprintf("=?UTF-8?B?%s?=", base64.StdEncoding.EncodeToString([]byte(title)))
 	header["Content-Type"] = "text/plain; charset=UTF-8"
 
@@ -141,11 +188,9 @@ func (p *PushService) Email(title, content string) {
 	var err error
 	if p.config.SmtpSsl == "是" {
 		// SMTP SSL (usually port 465) requires custom dialer
-		// Simplified for now, standard smtp.SendMail uses STARTTLS if supported on 587
-		// For 465 SSL, we need tls.Dial
-		err = sendMailSSL(addr, auth, p.config.SenderEmail, []string{p.config.ReceiverEmail}, []byte(message))
+		err = sendMailSSL(addr, auth, p.config.SenderEmail, validReceivers, []byte(message))
 	} else {
-		err = smtp.SendMail(addr, auth, p.config.SenderEmail, []string{p.config.ReceiverEmail}, []byte(message))
+		err = smtp.SendMail(addr, auth, p.config.SenderEmail, validReceivers, []byte(message))
 	}
 
 	if err != nil {
@@ -203,44 +248,60 @@ func (p *PushService) Ntfy(title, content string) {
 	if p.config.NtfyUrl == "" {
 		return
 	}
-	// ntfy.sh/topic
-	payload := map[string]interface{}{
-		"topic":   strings.TrimPrefix(p.config.NtfyUrl, "https://ntfy.sh/"), // Simplified extraction
-		"title":   title,
-		"message": content,
-		"tags":    []string{p.config.NtfyTag},
+
+	urlsStr := strings.ReplaceAll(p.config.NtfyUrl, "，", ",")
+	urls := strings.Split(urlsStr, ",")
+
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue
+		}
+
+		// Split server and topic
+		// Python: server, topic = _api.rsplit('/', maxsplit=1)
+		lastSlashIndex := strings.LastIndex(url, "/")
+		if lastSlashIndex == -1 {
+			continue
+		}
+		server := url[:lastSlashIndex]
+		topic := url[lastSlashIndex+1:]
+
+		payload := map[string]interface{}{
+			"topic":    topic,
+			"title":    title,
+			"message":  content,
+			"tags":     []string{p.config.NtfyTag},
+			"priority": 3,
+			"markdown": false,
+		}
+
+		p.postJson(server, payload)
 	}
-	// If url is full url, we might need to parse it better or just use it as endpoint if it's self-hosted
-	// Python code splits server and topic.
-	// Let's assume NtfyUrl is the full topic URL for simplicity or handle it like python
-
-	targetUrl := p.config.NtfyUrl
-	// If it's just the base url, we might need topic. But config says "NtfyUrl", usually full path.
-
-	// Python: server, topic = _api.rsplit('/', maxsplit=1)
-	// json_data = { "topic": topic ... }
-	// req = Request(server, ...)
-	// This implies posting to root server with topic in body.
-
-	// Let's just POST to the URL directly which ntfy also supports (publish via POST)
-	// If we post to https://ntfy.sh/topic, body is message.
-	// Or we can post JSON to https://ntfy.sh
-
-	// Let's try posting JSON to the URL provided.
-	p.postJson(targetUrl, payload)
 }
 
 func (p *PushService) PushPlus(title, content string) {
 	if p.config.PushPlusToken == "" {
 		return
 	}
-	url := "https://www.pushplus.plus/send"
-	payload := map[string]string{
-		"token":   p.config.PushPlusToken,
-		"title":   title,
-		"content": content,
+
+	tokensStr := strings.ReplaceAll(p.config.PushPlusToken, "，", ",")
+	tokens := strings.Split(tokensStr, ",")
+
+	for _, token := range tokens {
+		token = strings.TrimSpace(token)
+		if token == "" {
+			continue
+		}
+
+		url := "https://www.pushplus.plus/send"
+		payload := map[string]string{
+			"token":   token,
+			"title":   title,
+			"content": content,
+		}
+		p.postJson(url, payload)
 	}
-	p.postJson(url, payload)
 }
 
 func (p *PushService) postJson(url string, data interface{}) {

@@ -1,6 +1,6 @@
 <script setup>
 import {reactive, onMounted, ref} from 'vue'
-import {GetConfig} from '../../wailsjs/go/main/App'
+import {GetConfig} from '../wailsjs/go/main/App.js'
 
 const config = reactive({
   RecordingSettings: {},
@@ -62,6 +62,26 @@ onMounted(() => {
               <option>mkv</option>
               <option>flv</option>
               <option>mp4</option>
+              <option>mp3</option>
+              <option>m4a</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Split Recording</label>
+            <select v-model="config.RecordingSettings.SplitRecording">
+              <option>是</option>
+              <option>否</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Split Duration (s)</label>
+            <input type="number" v-model="config.RecordingSettings.SplitDuration" />
+          </div>
+          <div class="form-group">
+            <label>Generate Subtitles</label>
+            <select v-model="config.RecordingSettings.GenerateTimeSubtitle">
+              <option>是</option>
+              <option>否</option>
             </select>
           </div>
           <div class="form-group">

@@ -1,9 +1,10 @@
 <script setup>
 import {reactive, onMounted, onUnmounted} from 'vue'
-import {StartRecording, StopRecording, GetRecordingStatus} from '../../wailsjs/go/main/App'
+import {AddUrl, RemoveUrl, GetUrls, GetRecordingStatus} from '../wailsjs/go/main/App.js'
 
 const state = reactive({
   url: '',
+  urls: [],
   statusMap: {},
   message: ''
 })
@@ -11,24 +12,34 @@ const state = reactive({
 let timer = null
 
 const updateStatus = () => {
-  GetRecordingStatus().then(result => {
-    state.statusMap = result
+  // Get persistent URLs first
+  GetUrls().then(urls => {
+    state.urls = urls || []
+    // Then get active statuses
+    GetRecordingStatus().then(result => {
+      state.statusMap = result
+    })
   })
 }
 
 const start = () => {
   if (!state.url) return
-  StartRecording(state.url).then(result => {
+  AddUrl(state.url).then(result => {
     state.message = result
+    state.url = '' // Clear input
     updateStatus()
   })
 }
 
 const stop = (url) => {
-  StopRecording(url).then(result => {
+  RemoveUrl(url).then(result => {
     state.message = result
     updateStatus()
   })
+}
+
+const getStatus = (url) => {
+  return state.statusMap[url] || 'Stopped'
 }
 
 const getStatusClass = (status) => {
@@ -61,14 +72,14 @@ onUnmounted(() => {
     
     <div class="status-list card">
       <h3>{{ $t('status.active') }}</h3>
-      <div v-if="Object.keys(state.statusMap).length === 0" class="empty-state">
+      <div v-if="state.urls.length === 0" class="empty-state">
         {{ $t('status.empty') }}
       </div>
       <ul v-else>
-        <li v-for="(status, url) in state.statusMap" :key="url">
+        <li v-for="url in state.urls" :key="url">
           <div class="info">
             <span class="url" :title="url">{{ url }}</span>
-            <span class="badge" :class="getStatusClass(status)">{{ status }}</span>
+            <span class="badge" :class="getStatusClass(getStatus(url))">{{ getStatus(url) }}</span>
           </div>
           <button @click="stop(url)" class="stop-btn">{{ $t('status.stop') }}</button>
         </li>

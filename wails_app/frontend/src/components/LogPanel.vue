@@ -1,6 +1,6 @@
 <script setup>
 import {ref, onMounted, onUnmounted} from 'vue'
-import {EventsOn} from '../../wailsjs/runtime/runtime'
+import {EventsOn} from '../wailsjs/runtime/runtime.js'
 
 const logs = ref([])
 const logContainer = ref(null)

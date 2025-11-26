@@ -40,7 +40,7 @@ func (d *DouyuSpider) SetCookies(cookies string) {
 	d.Cookies = cookies
 }
 
-func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
+func (d *DouyuSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	// Logic ported from get_douyu_stream_data
 	// 1. Get Room ID
 	rid := ""
@@ -48,7 +48,9 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 	matches := reRid.FindStringSubmatch(url)
 	if len(matches) > 1 {
 		rid = matches[1]
-	} else {
+	}
+
+	if rid == "" {
 		parts := strings.Split(url, "douyu.com/")
 		if len(parts) > 1 {
 			rid = strings.Split(parts[1], "?")[0]
@@ -56,7 +58,7 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 	}
 
 	if rid == "" {
-		return "", fmt.Errorf("cannot find room id")
+		return nil, fmt.Errorf("cannot find room id")
 	}
 
 	// 2. Get Info (to check if live)
@@ -66,25 +68,25 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0")
 	resp, err := d.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
 	var infoData map[string]interface{}
 	if err := json.Unmarshal(body, &infoData); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	room, ok := infoData["room"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("room info not found")
+		return nil, fmt.Errorf("room info not found")
 	}
 
 	showStatus, _ := room["show_status"].(float64)
 	videoLoop, _ := room["videoLoop"].(float64)
 	if showStatus != 1 || videoLoop != 0 {
-		return "", fmt.Errorf("room is not live")
+		return nil, fmt.Errorf("room is not live")
 	}
 
 	// 3. Get Stream Data (Sign logic)
@@ -107,7 +109,7 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 
 	// timestamp := time.Now().UnixNano() / 1e6
 	// did := "10000000000000000000000000001501"
-	// auth := md5Sum(fmt.Sprintf("%s%d", rid, timestamp))
+	// auth	sign := douyuMd5Sum(fmt.Sprintf("%s%s%s%s", roomId, did, timestamp, "2501"))
 
 	// Note: Douyu signature is notoriously hard to maintain without JS.
 	// For this task, I will implement a placeholder that warns about JS requirement,
@@ -119,7 +121,7 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 	reqM.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1")
 	respM, err := d.Client.Do(reqM)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer respM.Body.Close()
 	bodyM, _ := io.ReadAll(respM.Body)
@@ -129,13 +131,13 @@ func (d *DouyuSpider) GetStreamUrl(url string) (string, error) {
 	reRoomUrl := regexp.MustCompile(`"url":"(http.*?\.m3u8.*?)"`)
 	matchesM := reRoomUrl.FindStringSubmatch(htmlM)
 	if len(matchesM) > 1 {
-		return strings.Replace(matchesM[1], "\\", "", -1), nil
+		return &StreamInfo{Url: strings.Replace(matchesM[1], "\\", "", -1)}, nil
 	}
 
-	return "", fmt.Errorf("douyu signature logic requires JS engine, fallback failed")
+	return nil, fmt.Errorf("douyu signature logic requires JS engine, fallback failed")
 }
 
-func md5Sum(text string) string {
+func douyuMd5Sum(text string) string {
 	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
 }

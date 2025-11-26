@@ -24,10 +24,13 @@
             "save_path": "保存路径",
             "video_quality": "视频质量",
             "video_format": "视频格式",
-            "loop_interval": "循环检测间隔 (秒)",
+            "loop_interval": "循环间隔(秒)",
             "max_threads": "最大线程数",
             "use_proxy": "使用代理",
-            "proxy_addr": "代理地址"
+            "proxy_addr": "代理地址",
+            "split_recording": "分段录制",
+            "split_duration": "分段时长(秒)",
+            "generate_subtitles": "生成字幕"
         },
         "push": {
             "channels": "推送渠道",

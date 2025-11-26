@@ -37,13 +37,13 @@ func (k *KuaishouSpider) SetCookies(cookies string) {
 	k.Cookies = cookies
 }
 
-func (k *KuaishouSpider) GetStreamUrl(url string) (string, error) {
+func (k *KuaishouSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	// Headers
 	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2")
@@ -51,13 +51,13 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (string, error) {
 
 	resp, err := k.Client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	htmlStr := string(bodyBytes)
 
@@ -66,45 +66,43 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (string, error) {
 	re := regexp.MustCompile(`<script>window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s;`)
 	matches := re.FindStringSubmatch(htmlStr)
 	if len(matches) < 2 {
-		return "", fmt.Errorf("INITIAL_STATE not found in kuaishou page")
+		return nil, fmt.Errorf("stream info not found in kuaishou page")
 	}
 
 	jsonStr := matches[1]
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return "", fmt.Errorf("failed to parse INITIAL_STATE: %v", err)
+		return nil, fmt.Errorf("failed to parse stream info: %v", err)
 	}
 
 	// Navigate JSON: liveroom -> liveStream -> playUrls -> h264 -> adaptationSet -> representation
 	// Note: The structure might vary based on the Python code analysis
 	// Python code: play_list = re.findall('(\\{"liveStream".*?),"gameInfo', json_str)[0] + "}"
-	// It seems the JSON structure in INITIAL_STATE is huge, and we might need to look for liveStream directly if the full parse fails or is too complex.
-	// But let's try to navigate the parsed map first.
 
 	liveStreamObj, ok := data["liveStream"].(map[string]interface{})
 	if !ok {
 		// Try to find it in a nested structure if needed, or maybe the regex captured a different level
-		return "", fmt.Errorf("liveStream not found in INITIAL_STATE")
+		return nil, fmt.Errorf("liveStream not found in INITIAL_STATE")
 	}
 
 	playUrls, ok := liveStreamObj["playUrls"].(map[string]interface{})
-	if !ok {
-		return "", fmt.Errorf("playUrls not found")
+	if !ok || len(playUrls) == 0 { // Combined condition for not found or empty
+		return nil, fmt.Errorf("playUrls is empty")
 	}
 
 	h264, ok := playUrls["h264"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("h264 playUrls not found")
+		return nil, fmt.Errorf("livestream data not found")
 	}
 
 	adaptationSet, ok := h264["adaptationSet"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("adaptationSet not found")
+		return nil, fmt.Errorf("adaptationSet not found")
 	}
 
 	representation, ok := adaptationSet["representation"].([]interface{})
 	if !ok || len(representation) == 0 {
-		return "", fmt.Errorf("representation list not found or empty")
+		return nil, fmt.Errorf("representation is empty")
 	}
 
 	// Iterate to find the best quality (usually the first one or check bitrate)
@@ -113,11 +111,11 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (string, error) {
 		if !ok {
 			continue
 		}
-		url, ok := repMap["url"].(string)
-		if ok && url != "" {
-			return url, nil
+		urlStr, ok := repMap["url"].(string)
+		if ok && urlStr != "" {
+			return &StreamInfo{Url: urlStr}, nil
 		}
 	}
 
-	return "", fmt.Errorf("no valid stream url found in representation")
+	return nil, fmt.Errorf("no valid stream found")
 }
