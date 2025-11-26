@@ -14,6 +14,7 @@
         "active": "正在进行的任务",
         "empty": "暂无正在进行的任务，请在上方添加",
         "stop": "停止",
+        "mini_mode": "悬浮球模式",
         "recording": "录制中",
         "monitoring": "监控中",
         "stopped": "已停止",

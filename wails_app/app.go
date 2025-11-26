@@ -3,8 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"wails_app/internal/config"
 	"wails_app/internal/recorder"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -70,20 +75,53 @@ func (a *App) GetConfig() *config.Configuration {
 	return a.Config
 }
 
-// UpdateConfig updates the configuration and saves it to file
+// UpdateConfig updates the application configuration
 func (a *App) UpdateConfig(cfg *config.Configuration) string {
 	a.Config = cfg
-	cfgPath := config.GetDefaultConfigPath()
-	if cfgPath == "" {
-		return "Config file not found"
+
+	// Save to file
+	configPath := config.GetDefaultConfigPath()
+	if configPath == "" {
+		cwd, _ := os.Getwd()
+		configPath = filepath.Join(cwd, "config", "config.ini")
 	}
-	err := config.SaveConfig(cfgPath, cfg)
+
+	err := config.SaveConfig(configPath, cfg)
 	if err != nil {
-		return fmt.Sprintf("Error saving config: %v", err)
+		return "Error saving config: " + err.Error()
 	}
-	// Update RecorderManager config
+
+	// Update manager
 	a.RecorderManager.UpdateConfig(cfg)
+
 	return "Saved"
+}
+
+// ToggleMiniMode switches between mini (floating ball) and normal mode
+func (a *App) ToggleMiniMode(mini bool) {
+	if mini {
+		// Switch to mini mode
+		runtime.WindowSetSize(a.ctx, 60, 60)
+		runtime.WindowSetAlwaysOnTop(a.ctx, true)
+
+		// Restore position if saved
+		if a.Config.WindowSettings.MiniPosX != 0 || a.Config.WindowSettings.MiniPosY != 0 {
+			runtime.WindowSetPosition(a.ctx, a.Config.WindowSettings.MiniPosX, a.Config.WindowSettings.MiniPosY)
+		}
+	} else {
+		// Save current position (mini mode position)
+		x, y := runtime.WindowGetPosition(a.ctx)
+		a.Config.WindowSettings.MiniPosX = x
+		a.Config.WindowSettings.MiniPosY = y
+
+		// Save config to persist position
+		a.UpdateConfig(a.Config)
+
+		// Switch to normal mode
+		runtime.WindowSetSize(a.ctx, 1200, 800)
+		runtime.WindowSetAlwaysOnTop(a.ctx, false)
+		runtime.WindowCenter(a.ctx)
+	}
 }
 
 // StartRecording starts recording a URL

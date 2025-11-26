@@ -1,13 +1,18 @@
 <script setup>
 import {ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {WindowSetTitle} from './wailsjs/runtime/runtime.js'
+import {WindowSetTitle, EventsOn} from './wailsjs/runtime/runtime.js'
+import {ToggleMiniMode} from './wailsjs/go/main/App.js'
 import ConfigPanel from './components/ConfigPanel.vue'
 import StatusPanel from './components/StatusPanel.vue'
 import LogPanel from './components/LogPanel.vue'
+import TitleBar from './components/TitleBar.vue'
+import FloatingBall from './components/FloatingBall.vue'
 
 const { t, locale } = useI18n()
 const currentTab = ref('status')
+const isMiniMode = ref(false)
+const recordingCount = ref(0)
 
 // Update window title when locale changes
 watch(locale, () => {
@@ -16,62 +21,94 @@ watch(locale, () => {
 
 // Set initial title
 WindowSetTitle(t('app.title'))
+
+const toggleMiniMode = async (mini) => {
+  await ToggleMiniMode(mini)
+  isMiniMode.value = mini
+}
+
+// Listen for mini mode toggle from StatusPanel
+const handleMiniModeToggle = () => {
+  toggleMiniMode(true)
+}
+
+// Listen for recording status updates to show badge on ball
+// We can reuse the existing event or poll, but for now let's assume StatusPanel emits or we listen to backend
+// For simplicity, let's just listen to a global event or pass props if we had a store.
+// Since we don't have a store, we'll rely on StatusPanel to update us or just mock it for now.
+// Better: Listen to "recording_status_change" event from backend if available, or just use a timer here too?
+// Let's add a simple listener for now if we can.
 </script>
 
 <template>
-  <div id="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo-icon">🔴</div>
-        <div class="logo-text">{{ $t('app.title') }}</div>
+  <div id="app" :class="{mini: isMiniMode}">
+    <template v-if="!isMiniMode">
+      <TitleBar />
+      <div class="app-layout">
+        <aside class="sidebar">
+          <div class="brand">
+            <div class="logo-icon">🔴</div>
+            <div class="logo-text">{{ $t('app.title') }}</div>
+          </div>
+          
+          <nav class="nav-menu">
+            <button 
+              :class="['nav-item', {active: currentTab === 'status'}]" 
+              @click="currentTab = 'status'"
+            >
+              <span class="icon">📹</span>
+              <span class="label">{{ $t('nav.status') }}</span>
+            </button>
+            <button 
+              :class="['nav-item', {active: currentTab === 'config'}]" 
+              @click="currentTab = 'config'"
+            >
+              <span class="icon">⚙️</span>
+              <span class="label">{{ $t('nav.config') }}</span>
+            </button>
+            <button 
+              :class="['nav-item', {active: currentTab === 'logs'}]" 
+              @click="currentTab = 'logs'"
+            >
+              <span class="icon">📝</span>
+              <span class="label">{{ $t('nav.logs') }}</span>
+            </button>
+          </nav>
+    
+          <div class="sidebar-footer">
+            <div class="lang-switch">
+              <select v-model="$i18n.locale">
+                <option value="zh">🇨🇳 中文</option>
+                <option value="en">🇺🇸 English</option>
+              </select>
+            </div>
+            <div class="version-info">v1.0.0</div>
+          </div>
+        </aside>
+    
+        <main class="main-content">
+          <transition name="fade" mode="out-in">
+            <keep-alive>
+              <component 
+                :is="currentTab === 'status' ? StatusPanel : (currentTab === 'config' ? ConfigPanel : LogPanel)" 
+                @toggle-mini="handleMiniModeToggle"
+              />
+            </keep-alive>
+          </transition>
+        </main>
       </div>
-      
-      <nav class="nav-menu">
-        <button 
-          :class="['nav-item', {active: currentTab === 'status'}]" 
-          @click="currentTab = 'status'"
-        >
-          <span class="icon">📹</span>
-          <span class="label">{{ $t('nav.status') }}</span>
-        </button>
-        <button 
-          :class="['nav-item', {active: currentTab === 'config'}]" 
-          @click="currentTab = 'config'"
-        >
-          <span class="icon">⚙️</span>
-          <span class="label">{{ $t('nav.config') }}</span>
-        </button>
-        <button 
-          :class="['nav-item', {active: currentTab === 'logs'}]" 
-          @click="currentTab = 'logs'"
-        >
-          <span class="icon">📝</span>
-          <span class="label">{{ $t('nav.logs') }}</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="lang-switch">
-          <select v-model="$i18n.locale">
-            <option value="zh">🇨🇳 中文</option>
-            <option value="en">🇺🇸 English</option>
-          </select>
-        </div>
-        <div class="version-info">v1.0.0</div>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <transition name="fade" mode="out-in">
-        <keep-alive>
-          <component :is="currentTab === 'status' ? StatusPanel : (currentTab === 'config' ? ConfigPanel : LogPanel)" />
-        </keep-alive>
-      </transition>
-    </main>
+    </template>
+    
+    <FloatingBall 
+      v-else 
+      :recording-count="recordingCount" 
+      @restore="toggleMiniMode(false)" 
+    />
   </div>
 </template>
 
 <style>
+/* ... (keep existing root variables) ... */
 :root {
   --primary-color: #ff2c55;
   --primary-hover: #ff4769;
@@ -91,13 +128,28 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* Prevent body scroll */
 }
 
 #app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background: transparent; /* Allow transparency for floating ball */
+}
+
+#app.mini {
+  align-items: center;
+  justify-content: center;
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* Sidebar Styles */

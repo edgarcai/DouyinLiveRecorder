@@ -34,6 +34,10 @@ export function StopRecording(arg1) {
   return window['go']['main']['App']['StopRecording'](arg1);
 }
 
+export function ToggleMiniMode(arg1) {
+  return window['go']['main']['App']['ToggleMiniMode'](arg1);
+}
+
 export function UpdateConfig(arg1) {
   return window['go']['main']['App']['UpdateConfig'](arg1);
 }

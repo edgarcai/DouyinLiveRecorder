@@ -14,6 +14,7 @@
         "active": "Active Recordings",
         "empty": "No active recordings. Start one above!",
         "stop": "Stop",
+        "mini_mode": "Mini Mode",
         "recording": "Recording",
         "monitoring": "Monitoring",
         "stopped": "Stopped",

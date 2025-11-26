@@ -42,6 +42,20 @@ export namespace config {
 	        this.PopkontvToken = source["PopkontvToken"];
 	    }
 	}
+	export class WindowSettings {
+	    MiniPosX: number;
+	    MiniPosY: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new WindowSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.MiniPosX = source["MiniPosX"];
+	        this.MiniPosY = source["MiniPosY"];
+	    }
+	}
 	export class Cookies {
 	    Douyin: string;
 	    Kuaishou: string;
@@ -294,6 +308,7 @@ export namespace config {
 	    Cookies: Cookies;
 	    Authorization: Authorization;
 	    Accounts: Accounts;
+	    WindowSettings: WindowSettings;
 	
 	    static createFrom(source: any = {}) {
 	        return new Configuration(source);
@@ -306,6 +321,7 @@ export namespace config {
 	        this.Cookies = this.convertValues(source["Cookies"], Cookies);
 	        this.Authorization = this.convertValues(source["Authorization"], Authorization);
 	        this.Accounts = this.convertValues(source["Accounts"], Accounts);
+	        this.WindowSettings = this.convertValues(source["WindowSettings"], WindowSettings);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -326,6 +342,7 @@ export namespace config {
 		    return a;
 		}
 	}
+	
 	
 	
 

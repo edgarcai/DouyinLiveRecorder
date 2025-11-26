@@ -13,6 +13,12 @@ type Configuration struct {
 	Cookies           Cookies           `ini:"Cookie"`
 	Authorization     Authorization     `ini:"Authorization"`
 	Accounts          Accounts          `ini:"账号密码"`
+	WindowSettings    WindowSettings    `ini:"窗口设置"`
+}
+
+type WindowSettings struct {
+	MiniPosX int `ini:"悬浮球X坐标"`
+	MiniPosY int `ini:"悬浮球Y坐标"`
 }
 
 type RecordingSettings struct {

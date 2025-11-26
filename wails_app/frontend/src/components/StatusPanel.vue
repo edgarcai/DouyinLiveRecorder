@@ -90,6 +90,9 @@ onUnmounted(() => {
           <span class="btn-icon">▶</span>
           {{ $t('status.start') }}
         </button>
+        <button @click="$emit('toggle-mini')" class="icon-btn" :title="$t('status.mini_mode')">
+          🪟
+        </button>
       </div>
       
       <transition name="slide-fade">
@@ -164,7 +167,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  gap: 8px;
   white-space: nowrap;
+}
+
+.icon-btn {
+  height: 44px;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f5f7fa;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .message-box {
