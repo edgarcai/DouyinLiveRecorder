@@ -21,6 +21,10 @@ func NewPushService(cfg *config.PushSettings) *PushService {
 	return &PushService{config: cfg}
 }
 
+func (p *PushService) UpdateConfig(cfg *config.PushSettings) {
+	p.config = cfg
+}
+
 func (p *PushService) Send(title, content string) {
 	// Split channels by comma (support both English and Chinese comma)
 	channelsStr := strings.ReplaceAll(p.config.PushChannels, "，", ",")

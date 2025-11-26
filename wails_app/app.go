@@ -70,6 +70,22 @@ func (a *App) GetConfig() *config.Configuration {
 	return a.Config
 }
 
+// UpdateConfig updates the configuration and saves it to file
+func (a *App) UpdateConfig(cfg *config.Configuration) string {
+	a.Config = cfg
+	cfgPath := config.GetDefaultConfigPath()
+	if cfgPath == "" {
+		return "Config file not found"
+	}
+	err := config.SaveConfig(cfgPath, cfg)
+	if err != nil {
+		return fmt.Sprintf("Error saving config: %v", err)
+	}
+	// Update RecorderManager config
+	a.RecorderManager.UpdateConfig(cfg)
+	return "Saved"
+}
+
 // StartRecording starts recording a URL
 func (a *App) StartRecording(url string) string {
 	err := a.RecorderManager.StartRecording(url)

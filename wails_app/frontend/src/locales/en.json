@@ -1,4 +1,7 @@
 {
+    "app": {
+        "title": "Multi Platform Live Recorder"
+    },
     "nav": {
         "status": "Status",
         "config": "Config",
@@ -10,15 +13,29 @@
         "start": "Start Recording",
         "active": "Active Recordings",
         "empty": "No active recordings. Start one above!",
-        "stop": "Stop"
+        "stop": "Stop",
+        "recording": "Recording",
+        "monitoring": "Monitoring",
+        "stopped": "Stopped",
+        "starting": "Starting",
+        "error": "Error"
     },
     "config": {
         "title": "Configuration",
+        "saved": "Configuration saved successfully",
+        "loading": "Loading configuration...",
+        "saving": "Saving...",
         "tabs": {
             "general": "General",
             "cookies": "Cookies",
             "push": "Push",
             "accounts": "Accounts"
+        },
+        "subtitle": {
+            "general": "Configure basic recording parameters",
+            "cookies": "Manage authentication cookies for different platforms",
+            "push": "Configure notification channels",
+            "accounts": "Manage platform credentials"
         },
         "general": {
             "save_path": "Save Path",
@@ -37,10 +54,37 @@
             "on_start": "Push on Start",
             "dingtalk_url": "DingTalk URL",
             "bark_url": "Bark URL"
+        },
+        "placeholder": {
+            "save_path": "Default: ./downloads",
+            "cookie": "Paste cookie here...",
+            "channels": "dingtalk,wechat,bark",
+            "proxy": "http://127.0.0.1:7890"
+        },
+        "hint": {
+            "channels": "Separate multiple channels with commas"
+        },
+        "options": {
+            "yes": "Yes",
+            "no": "No",
+            "quality": {
+                "origin": "Origin",
+                "blue": "BlueRay",
+                "super": "Super",
+                "high": "High",
+                "standard": "Standard",
+                "fluent": "Fluent"
+            }
         }
     },
     "logs": {
         "title": "System Logs",
-        "clear": "Clear"
+        "clear": "Clear",
+        "copy": "Copy",
+        "lines": "lines",
+        "empty": "No logs available",
+        "copy_tooltip": "Copy to clipboard",
+        "clear_tooltip": "Clear logs",
+        "init": "Log viewer initialized..."
     }
 }

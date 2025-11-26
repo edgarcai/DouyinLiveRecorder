@@ -1,4 +1,7 @@
 {
+    "app": {
+        "title": "多平台直播录制工具"
+    },
     "nav": {
         "status": "状态监控",
         "config": "配置管理",
@@ -10,15 +13,29 @@
         "start": "开始录制",
         "active": "正在进行的任务",
         "empty": "暂无正在进行的任务，请在上方添加",
-        "stop": "停止"
+        "stop": "停止",
+        "recording": "录制中",
+        "monitoring": "监控中",
+        "stopped": "已停止",
+        "starting": "启动中",
+        "error": "错误"
     },
     "config": {
         "title": "系统配置",
+        "saved": "配置已保存",
+        "loading": "正在加载配置...",
+        "saving": "保存中...",
         "tabs": {
             "general": "通用设置",
             "cookies": "Cookies",
             "push": "推送通知",
             "accounts": "账号管理"
+        },
+        "subtitle": {
+            "general": "配置基本录制参数",
+            "cookies": "管理各平台的认证 Cookie",
+            "push": "配置消息推送渠道",
+            "accounts": "管理平台登录账号"
         },
         "general": {
             "save_path": "保存路径",
@@ -37,10 +54,37 @@
             "on_start": "开播推送",
             "dingtalk_url": "钉钉 Webhook",
             "bark_url": "Bark URL"
+        },
+        "placeholder": {
+            "save_path": "默认: ./downloads",
+            "cookie": "在此粘贴 Cookie...",
+            "channels": "dingtalk,wechat,bark",
+            "proxy": "http://127.0.0.1:7890"
+        },
+        "hint": {
+            "channels": "多个渠道请用逗号分隔"
+        },
+        "options": {
+            "yes": "是",
+            "no": "否",
+            "quality": {
+                "origin": "原画",
+                "blue": "蓝光",
+                "super": "超清",
+                "high": "高清",
+                "standard": "标清",
+                "fluent": "流畅"
+            }
         }
     },
     "logs": {
         "title": "系统日志",
-        "clear": "清空"
+        "clear": "清空",
+        "copy": "复制",
+        "lines": "行",
+        "empty": "暂无日志",
+        "copy_tooltip": "复制到剪贴板",
+        "clear_tooltip": "清空日志",
+        "init": "日志查看器已初始化..."
     }
 }

@@ -1,17 +1,25 @@
 <script setup>
 import {ref, onMounted, onUnmounted} from 'vue'
+import {useI18n} from 'vue-i18n'
 import {EventsOn} from '../wailsjs/runtime/runtime.js'
 
+const { t } = useI18n()
 const logs = ref([])
 const logContainer = ref(null)
 
 const addLog = (msg) => {
   const time = new Date().toLocaleTimeString()
-  logs.value.push(`[${time}] ${msg}`)
+  logs.value.push({
+    time,
+    content: msg,
+    id: Date.now() + Math.random()
+  })
+  
   // Keep last 1000 logs
   if (logs.value.length > 1000) {
     logs.value.shift()
   }
+  
   // Auto scroll
   setTimeout(() => {
     if (logContainer.value) {
@@ -20,23 +28,45 @@ const addLog = (msg) => {
   }, 10)
 }
 
+const copyLogs = () => {
+  const text = logs.value.map(l => `[${l.time}] ${l.content}`).join('\n')
+  navigator.clipboard.writeText(text)
+}
+
 onMounted(() => {
   EventsOn("log", (msg) => {
     addLog(msg)
   })
-  addLog("Log viewer initialized...")
+  addLog(t('logs.init'))
 })
 </script>
 
 <template>
   <div class="log-panel">
-    <div class="header">
-      <h2>{{ $t('logs.title') }}</h2>
-      <button @click="logs = []" class="clear-btn">{{ $t('logs.clear') }}</button>
-    </div>
-    <div class="log-container" ref="logContainer">
-      <div v-for="(log, index) in logs" :key="index" class="log-line">
-        {{ log }}
+    <div class="card log-card">
+      <div class="card-header">
+        <div class="header-left">
+          <h2>{{ $t('logs.title') }}</h2>
+          <span class="log-count">{{ logs.length }} {{ $t('logs.lines') }}</span>
+        </div>
+        <div class="actions">
+          <button @click="copyLogs" class="action-btn" :title="$t('logs.copy_tooltip')">
+            📋 {{ $t('logs.copy') }}
+          </button>
+          <button @click="logs = []" class="action-btn" :title="$t('logs.clear_tooltip')">
+            🗑️ {{ $t('logs.clear') }}
+          </button>
+        </div>
+      </div>
+      
+      <div class="log-container" ref="logContainer">
+        <div v-if="logs.length === 0" class="empty-logs">
+          {{ $t('logs.empty') }}
+        </div>
+        <div v-else v-for="log in logs" :key="log.id" class="log-line">
+          <span class="log-time">[{{ log.time }}]</span>
+          <span class="log-content">{{ log.content }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -45,63 +75,135 @@ onMounted(() => {
 <style scoped>
 .log-panel {
   height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
 }
 
-.header {
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  background: #fff;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 h2 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 16px;
-  font-weight: 600;
-  border-left: 4px solid var(--primary-color);
-  padding-left: 10px;
+  font-size: 18px;
+  color: var(--text-primary);
+  border: none;
+  padding: 0;
 }
 
-.clear-btn {
-  padding: 4px 12px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
+.log-count {
   font-size: 12px;
-  color: #666;
-  transition: all 0.2s;
+  color: var(--text-secondary);
+  background: #f0f2f5;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
-.clear-btn:hover {
-  background: #e0e0e0;
-  color: #333;
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn:hover {
+  background: #f5f7fa;
+  color: var(--text-primary);
+  border-color: #dcdfe6;
 }
 
 .log-container {
   flex: 1;
   background: #1e1e1e;
-  color: #d4d4d4;
-  padding: 15px;
-  border-radius: 8px;
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 13px;
+  padding: 16px;
   overflow-y: auto;
-  white-space: pre-wrap;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.empty-logs {
+  color: #666;
+  text-align: center;
+  padding-top: 40px;
+  font-style: italic;
 }
 
 .log-line {
-  margin-bottom: 4px;
-  line-height: 1.4;
-  border-bottom: 1px solid #333;
-  padding-bottom: 2px;
+  display: flex;
+  gap: 12px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.log-line:last-child {
-  border-bottom: none;
+.log-line:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.log-time {
+  color: #858585;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.log-content {
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Custom scrollbar for dark theme */
+.log-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.log-container::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+  border: 2px solid #1e1e1e;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
 }
 </style>

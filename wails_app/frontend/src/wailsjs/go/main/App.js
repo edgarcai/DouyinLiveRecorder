@@ -33,3 +33,7 @@ export function StartRecording(arg1) {
 export function StopRecording(arg1) {
   return window['go']['main']['App']['StopRecording'](arg1);
 }
+
+export function UpdateConfig(arg1) {
+  return window['go']['main']['App']['UpdateConfig'](arg1);
+}

@@ -16,6 +16,15 @@ func LoadConfig(path string) (*Configuration, error) {
 	return cfg, nil
 }
 
+func SaveConfig(path string, cfg *Configuration) error {
+	f := ini.Empty()
+	err := ini.ReflectFrom(f, cfg)
+	if err != nil {
+		return err
+	}
+	return f.SaveTo(path)
+}
+
 func GetDefaultConfigPath() string {
 	// Assuming the config is in the parent directory of the executable or current working directory
 	// For development, we might look in the parent of wails_app

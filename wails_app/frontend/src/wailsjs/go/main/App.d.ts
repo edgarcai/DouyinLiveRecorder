@@ -17,3 +17,5 @@ export function RemoveUrl(arg1:string):Promise<string>;
 export function StartRecording(arg1:string):Promise<string>;
 
 export function StopRecording(arg1:string):Promise<string>;
+
+export function UpdateConfig(arg1:config.Configuration):Promise<string>;

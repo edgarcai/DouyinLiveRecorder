@@ -43,6 +43,13 @@ func NewManager(ctx context.Context, cfg *config.Configuration) *Manager {
 	}
 }
 
+func (m *Manager) UpdateConfig(cfg *config.Configuration) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.config = cfg
+	m.pushService.UpdateConfig(&cfg.PushSettings)
+}
+
 func (m *Manager) Log(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	fmt.Println(msg) // Keep stdout
