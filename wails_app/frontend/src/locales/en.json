@@ -19,7 +19,13 @@
         "monitoring": "Monitoring",
         "stopped": "Stopped",
         "starting": "Starting",
-        "error": "Error"
+        "error": "Error",
+        "started": "Started:"
+    },
+    "history": {
+        "title": "Recording History",
+        "empty": "No history available",
+        "delete": "Delete"
     },
     "config": {
         "title": "Configuration",
@@ -37,6 +43,12 @@
             "cookies": "Manage authentication cookies for different platforms",
             "push": "Configure notification channels",
             "accounts": "Manage platform credentials"
+        },
+        "accounts": {
+            "sooplive_account": "Sooplive Account",
+            "sooplive_password": "Sooplive Password",
+            "flextv_account": "Flextv Account",
+            "flextv_password": "Flextv Password"
         },
         "general": {
             "save_path": "Save Path",
@@ -62,6 +74,7 @@
             "channels": "dingtalk,wechat,bark",
             "proxy": "http://127.0.0.1:7890"
         },
+        "loading": "Loading configuration...",
         "hint": {
             "channels": "Separate multiple channels with commas"
         },
@@ -80,6 +93,8 @@
     },
     "logs": {
         "title": "System Logs",
+        "running_logs": "Running Logs",
+        "operation_logs": "Operation Logs",
         "clear": "Clear",
         "copy": "Copy",
         "lines": "lines",

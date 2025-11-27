@@ -164,7 +164,7 @@ onUnmounted(() => {
                   <span class="meta-title">{{ state.statusMap[url].title }}</span>
                 </div>
                 <div v-if="state.statusMap[url] && state.statusMap[url].status === 'Recording'" class="meta-time">
-                  Started: {{ formatTime(state.statusMap[url].start_time) }}
+                  {{ $t('status.started') }} {{ formatTime(state.statusMap[url].start_time) }}
                 </div>
               </div>
               <div class="status-badge" :class="getStatusClass(getStatus(url))">
@@ -184,12 +184,12 @@ onUnmounted(() => {
     <div v-if="state.showHistory" class="modal-overlay" @click="state.showHistory = false">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>Recording History</h3>
+          <h3>{{ $t('history.title') }}</h3>
           <button @click="state.showHistory = false" class="close-btn">×</button>
         </div>
         <div class="history-list">
           <div v-if="state.history.length === 0" class="empty-history">
-            No history available
+            {{ $t('history.empty') }}
           </div>
           <div 
             v-else 
@@ -205,7 +205,7 @@ onUnmounted(() => {
               <div class="history-url">{{ item.url }}</div>
               <div class="history-time">{{ formatTime(item.last_recorded) }}</div>
             </div>
-            <button @click.stop="deleteHistory(item.url)" class="delete-btn" title="Delete">
+            <button @click.stop="deleteHistory(item.url)" class="delete-btn" :title="$t('history.delete')">
               🗑️
             </button>
           </div>

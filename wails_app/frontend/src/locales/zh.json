@@ -19,7 +19,13 @@
         "monitoring": "监控中",
         "stopped": "已停止",
         "starting": "启动中",
-        "error": "错误"
+        "error": "错误",
+        "started": "开始时间:"
+    },
+    "history": {
+        "title": "录制历史",
+        "empty": "暂无历史记录",
+        "delete": "删除"
     },
     "config": {
         "title": "系统配置",
@@ -37,6 +43,12 @@
             "cookies": "管理各平台的认证 Cookie",
             "push": "配置消息推送渠道",
             "accounts": "管理平台登录账号"
+        },
+        "accounts": {
+            "sooplive_account": "Sooplive 账号",
+            "sooplive_password": "Sooplive 密码",
+            "flextv_account": "Flextv 账号",
+            "flextv_password": "Flextv 密码"
         },
         "general": {
             "save_path": "保存路径",
@@ -62,6 +74,7 @@
             "channels": "dingtalk,wechat,bark",
             "proxy": "http://127.0.0.1:7890"
         },
+        "loading": "正在加载配置...",
         "hint": {
             "channels": "多个渠道请用逗号分隔"
         },
@@ -80,6 +93,8 @@
     },
     "logs": {
         "title": "系统日志",
+        "running_logs": "运行日志",
+        "operation_logs": "操作日志",
         "clear": "清空",
         "copy": "复制",
         "lines": "行",

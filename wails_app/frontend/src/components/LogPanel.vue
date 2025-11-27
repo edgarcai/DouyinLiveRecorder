@@ -59,13 +59,13 @@ onMounted(() => {
               :class="['tab-btn', { active: activeTab === 'running' }]"
               @click="activeTab = 'running'"
             >
-              {{ $t('logs.running_logs') || '运行日志' }}
+              {{ $t('logs.running_logs') }}
             </button>
             <button 
               :class="['tab-btn', { active: activeTab === 'operation' }]"
               @click="activeTab = 'operation'"
             >
-              {{ $t('logs.operation_logs') || '操作日志' }}
+              {{ $t('logs.operation_logs') }}
             </button>
           </div>
           <span class="log-count">{{ filteredLogs.length }} {{ $t('logs.lines') }}</span>

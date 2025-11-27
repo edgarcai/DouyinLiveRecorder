@@ -65,7 +65,7 @@ onMounted(() => {
     
     <div v-if="loading.value" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading configuration...</p>
+      <p>{{ $t('config.loading') }}</p>
     </div>
     
     <div v-else class="config-content">
@@ -221,19 +221,19 @@ onMounted(() => {
           </div>
           <div class="form-grid">
             <div class="form-group">
-              <label>Sooplive Account</label>
+              <label>{{ $t('config.accounts.sooplive_account') }}</label>
               <input v-model="config.Accounts.SoopliveAccount" />
             </div>
             <div class="form-group">
-              <label>Sooplive Password</label>
+              <label>{{ $t('config.accounts.sooplive_password') }}</label>
               <input type="password" v-model="config.Accounts.SooplivePassword" />
             </div>
             <div class="form-group">
-              <label>Flextv Account</label>
+              <label>{{ $t('config.accounts.flextv_account') }}</label>
               <input v-model="config.Accounts.FlextvAccount" />
             </div>
             <div class="form-group">
-              <label>Flextv Password</label>
+              <label>{{ $t('config.accounts.flextv_password') }}</label>
               <input type="password" v-model="config.Accounts.FlextvPassword" />
             </div>
           </div>
