@@ -163,6 +163,9 @@ onUnmounted(() => {
                   <span class="meta-anchor">{{ state.statusMap[url].anchor_name }}</span>
                   <span class="meta-title">{{ state.statusMap[url].title }}</span>
                 </div>
+                <div v-if="state.statusMap[url] && state.statusMap[url].status === 'Recording'" class="meta-time">
+                  Started: {{ formatTime(state.statusMap[url].start_time) }}
+                </div>
               </div>
               <div class="status-badge" :class="getStatusClass(getStatus(url))">
                 <span class="status-dot"></span>
@@ -391,6 +394,12 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.meta-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
 }
 
 .status-badge {
