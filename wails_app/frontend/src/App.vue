@@ -6,6 +6,7 @@ import {ToggleMiniMode} from './wailsjs/go/main/App.js'
 import ConfigPanel from './components/ConfigPanel.vue'
 import StatusPanel from './components/StatusPanel.vue'
 import LogPanel from './components/LogPanel.vue'
+import HelpPanel from './components/HelpPanel.vue'
 import TitleBar from './components/TitleBar.vue'
 import FloatingBall from './components/FloatingBall.vue'
 
@@ -73,6 +74,13 @@ const handleMiniModeToggle = () => {
               <span class="icon">📝</span>
               <span class="label">{{ $t('nav.logs') }}</span>
             </button>
+            <button 
+              :class="['nav-item', {active: currentTab === 'help'}]" 
+              @click="currentTab = 'help'"
+            >
+              <span class="icon">❓</span>
+              <span class="label">{{ $t('nav.help') }}</span>
+            </button>
           </nav>
     
           <div class="sidebar-footer">
@@ -90,7 +98,7 @@ const handleMiniModeToggle = () => {
           <transition name="fade" mode="out-in">
             <keep-alive>
               <component 
-                :is="currentTab === 'status' ? StatusPanel : (currentTab === 'config' ? ConfigPanel : LogPanel)" 
+                :is="currentTab === 'status' ? StatusPanel : (currentTab === 'config' ? ConfigPanel : (currentTab === 'logs' ? LogPanel : HelpPanel))" 
                 @toggle-mini="handleMiniModeToggle"
               />
             </keep-alive>
@@ -179,6 +187,7 @@ body {
   font-size: 20px;
   font-weight: 800;
   background: linear-gradient(45deg, #ff2c55, #ff7eb3);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;

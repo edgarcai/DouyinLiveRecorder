@@ -5,7 +5,8 @@
     "nav": {
         "status": "Status",
         "config": "Config",
-        "logs": "Logs"
+        "logs": "Logs",
+        "help": "Help"
     },
     "status": {
         "title": "Recording Manager",
@@ -74,7 +75,6 @@
             "channels": "dingtalk,wechat,bark",
             "proxy": "http://127.0.0.1:7890"
         },
-        "loading": "Loading configuration...",
         "hint": {
             "channels": "Separate multiple channels with commas"
         },
@@ -102,5 +102,27 @@
         "copy_tooltip": "Copy to clipboard",
         "clear_tooltip": "Clear logs",
         "init": "Log viewer initialized..."
+    },
+    "help": {
+        "title": "Help Guide",
+        "intro": "Welcome to the Multi-Platform Live Recorder. This tool allows you to record live streams from various platforms like Douyin, TikTok, and more.",
+        "quick_start": {
+            "title": "Quick Start",
+            "step1": "Copy the live stream URL from your browser or app.",
+            "step2": "Paste the URL into the input box on the 'Status' page.",
+            "step3": "Click the 'Start Recording' button."
+        },
+        "config": {
+            "title": "Configuration",
+            "desc": "You can customize recording settings in the 'Config' page.",
+            "proxy": "If you are recording from international platforms (e.g., TikTok), make sure to configure the proxy settings."
+        },
+        "faq": {
+            "title": "FAQ",
+            "q1": "Why is the recording not starting?",
+            "a1": "Check if the stream is live and if your network connection is stable. For some platforms, you may need a proxy.",
+            "q2": "Where are the files saved?",
+            "a2": "By default, they are saved in the 'downloads' folder. You can change this in the Config page."
+        }
     }
 }
