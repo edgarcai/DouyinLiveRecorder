@@ -10,6 +10,10 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
+export function GetHistory() {
+  return window['go']['main']['App']['GetHistory']();
+}
+
 export function GetRecordingStatus() {
   return window['go']['main']['App']['GetRecordingStatus']();
 }
@@ -20,6 +24,10 @@ export function GetUrls() {
 
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function RemoveHistoryItem(arg1) {
+  return window['go']['main']['App']['RemoveHistoryItem'](arg1);
 }
 
 export function RemoveUrl(arg1) {

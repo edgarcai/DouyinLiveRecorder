@@ -23,6 +23,7 @@ type Manager struct {
 	mutex            sync.Mutex
 	config           *config.Configuration
 	pushService      *push.PushService
+	historyManager   *config.HistoryManager
 }
 
 type RecordingSession struct {
@@ -33,12 +34,13 @@ type RecordingSession struct {
 	StopChan  chan struct{}
 }
 
-func NewManager(ctx context.Context, cfg *config.Configuration) *Manager {
+func NewManager(ctx context.Context, cfg *config.Configuration, historyManager *config.HistoryManager) *Manager {
 	return &Manager{
 		ctx:              ctx,
 		activeRecordings: make(map[string]*RecordingSession),
 		config:           cfg,
 		pushService:      push.NewPushService(&cfg.PushSettings),
+		historyManager:   historyManager,
 	}
 }
 
@@ -149,6 +151,11 @@ func (m *Manager) runRecording(session *RecordingSession) {
 		// Stream is live!
 		session.Status = "Recording"
 		m.Log("Starting recording for %s from %s", session.Url, streamInfo.Url)
+
+		// Update History with metadata
+		if m.historyManager != nil {
+			m.historyManager.AddOrUpdate(session.Url, streamInfo.Title, streamInfo.AnchorName, session.Platform)
+		}
 
 		// Push Start Notification
 		if m.config.PushSettings.PushOnStart == "是" {

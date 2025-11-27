@@ -1,12 +1,14 @@
 <script setup>
-import {reactive, onMounted, onUnmounted} from 'vue'
-import {AddUrl, RemoveUrl, GetUrls, GetRecordingStatus} from '../wailsjs/go/main/App.js'
+import {reactive, onMounted, onUnmounted, ref, computed} from 'vue'
+import {AddUrl, RemoveUrl, GetUrls, GetRecordingStatus, GetHistory, RemoveHistoryItem} from '../wailsjs/go/main/App.js'
 
 const state = reactive({
   url: '',
   urls: [],
   statusMap: {},
-  message: ''
+  message: '',
+  history: [],
+  showHistory: false
 })
 
 let timer = null
@@ -69,6 +71,31 @@ onMounted(() => {
   timer = setInterval(updateStatus, 2000)
 })
 
+const showHistoryModal = () => {
+  GetHistory().then(history => {
+    state.history = history || []
+    state.showHistory = true
+  })
+}
+
+const selectHistory = (url) => {
+  state.url = url
+  state.showHistory = false
+}
+
+const formatTime = (timeStr) => {
+  return new Date(timeStr).toLocaleString()
+}
+
+const deleteHistory = (url) => {
+  RemoveHistoryItem(url).then(result => {
+    if (result === "Removed") {
+      // Refresh history
+      showHistoryModal()
+    }
+  })
+}
+
 onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
@@ -92,6 +119,9 @@ onUnmounted(() => {
         </button>
         <button @click="$emit('toggle-mini')" class="icon-btn" :title="$t('status.mini_mode')">
           🪟
+        </button>
+        <button @click="showHistoryModal" class="icon-btn" title="History">
+          🕒
         </button>
       </div>
       
@@ -129,6 +159,39 @@ onUnmounted(() => {
           </li>
         </transition-group>
       </ul>
+    </div>
+
+    <!-- History Modal -->
+    <div v-if="state.showHistory" class="modal-overlay" @click="state.showHistory = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Recording History</h3>
+          <button @click="state.showHistory = false" class="close-btn">×</button>
+        </div>
+        <div class="history-list">
+          <div v-if="state.history.length === 0" class="empty-history">
+            No history available
+          </div>
+          <div 
+            v-else 
+            v-for="item in state.history" 
+            :key="item.url" 
+            class="history-item"
+          >
+            <div class="history-content" @click="selectHistory(item.url)">
+              <div class="history-main">
+                <span v-if="item.anchor_name" class="history-anchor">{{ item.anchor_name }}</span>
+                <span v-if="item.title" class="history-title">{{ item.title }}</span>
+              </div>
+              <div class="history-url">{{ item.url }}</div>
+              <div class="history-time">{{ formatTime(item.last_recorded) }}</div>
+            </div>
+            <button @click.stop="deleteHistory(item.url)" class="delete-btn" title="Delete">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -372,5 +435,136 @@ onUnmounted(() => {
 .list-leave-to {
   opacity: 0;
   transform: translateX(30px);
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.history-list {
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.history-item {
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-item:hover {
+  background-color: #f5f7fa;
+}
+
+.history-main {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.history-anchor {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.history-title {
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-url {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.history-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 16px;
+}
+
+.history-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  transform: scale(1.1);
+}
+
+.empty-history {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
 }
 </style>

@@ -19,6 +19,7 @@ type App struct {
 	Config          *config.Configuration
 	RecorderManager *recorder.Manager
 	UrlManager      *config.URLManager
+	HistoryManager  *config.HistoryManager
 }
 
 // NewApp creates a new App application struct
@@ -59,10 +60,15 @@ func (a *App) startup(ctx context.Context) {
 	// Assuming config dir is same as config file
 	urlConfigPath := "config/URL_config.ini" // Default relative
 	// TODO: Use absolute path based on executable location or config location
+	// TODO: Use absolute path based on executable location or config location
 	a.UrlManager = config.NewURLManager(urlConfigPath)
 
+	// Initialize History Manager
+	historyPath := "config/history.json"
+	a.HistoryManager = config.NewHistoryManager(historyPath)
+
 	// Initialize Recorder Manager
-	a.RecorderManager = recorder.NewManager(a.ctx, a.Config)
+	a.RecorderManager = recorder.NewManager(a.ctx, a.Config, a.HistoryManager)
 
 	// Auto-start persisted URLs
 	for _, url := range a.UrlManager.GetURLs() {
@@ -157,6 +163,9 @@ func (a *App) GetRecordingStatus() map[string]string {
 
 // AddUrl adds a URL to the persistent list and starts recording
 func (a *App) AddUrl(url string) string {
+	// Update history (initial add, no metadata yet)
+	a.HistoryManager.AddOrUpdate(url, "", "", "")
+
 	err := a.UrlManager.AddURL(url)
 	if err != nil {
 		return err.Error()
@@ -182,4 +191,18 @@ func (a *App) RemoveUrl(url string) string {
 // GetUrls returns the persistent list of URLs
 func (a *App) GetUrls() []string {
 	return a.UrlManager.GetURLs()
+}
+
+// GetHistory returns the recording history
+func (a *App) GetHistory() []config.HistoryItem {
+	return a.HistoryManager.GetHistory()
+}
+
+// RemoveHistoryItem removes a history item
+func (a *App) RemoveHistoryItem(url string) string {
+	err := a.HistoryManager.Remove(url)
+	if err != nil {
+		return err.Error()
+	}
+	return "Removed"
 }

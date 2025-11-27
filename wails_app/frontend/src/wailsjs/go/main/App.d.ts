@@ -6,11 +6,15 @@ export function AddUrl(arg1:string):Promise<string>;
 
 export function GetConfig():Promise<config.Configuration>;
 
+export function GetHistory():Promise<Array<config.HistoryItem>>;
+
 export function GetRecordingStatus():Promise<Record<string, string>>;
 
 export function GetUrls():Promise<Array<string>>;
 
 export function Greet(arg1:string):Promise<string>;
+
+export function RemoveHistoryItem(arg1:string):Promise<string>;
 
 export function RemoveUrl(arg1:string):Promise<string>;
 
