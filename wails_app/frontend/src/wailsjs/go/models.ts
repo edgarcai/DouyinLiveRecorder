@@ -264,6 +264,7 @@ export namespace config {
 	    CustomScriptCmd: string;
 	    ProxyPlatforms: string;
 	    ExtraProxyPlatforms: string;
+	    FFmpegPath: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new RecordingSettings(source);
@@ -300,6 +301,7 @@ export namespace config {
 	        this.CustomScriptCmd = source["CustomScriptCmd"];
 	        this.ProxyPlatforms = source["ProxyPlatforms"];
 	        this.ExtraProxyPlatforms = source["ExtraProxyPlatforms"];
+	        this.FFmpegPath = source["FFmpegPath"];
 	    }
 	}
 	export class Configuration {

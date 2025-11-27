@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"wails_app/internal/config"
+	"wails_app/internal/ffmpeg"
 	"wails_app/internal/logger"
 	"wails_app/internal/recorder"
 
@@ -20,6 +21,7 @@ type App struct {
 	RecorderManager *recorder.Manager
 	UrlManager      *config.URLManager
 	HistoryManager  *config.HistoryManager
+	FFmpegManager   *ffmpeg.Manager
 }
 
 // NewApp creates a new App application struct
@@ -69,6 +71,9 @@ func (a *App) startup(ctx context.Context) {
 
 	// Initialize Recorder Manager
 	a.RecorderManager = recorder.NewManager(a.ctx, a.Config, a.HistoryManager)
+
+	// Initialize FFmpeg Manager
+	a.FFmpegManager = ffmpeg.NewManager(a.ctx)
 
 	// Auto-start persisted URLs
 	for _, url := range a.UrlManager.GetURLs() {
@@ -205,4 +210,37 @@ func (a *App) RemoveHistoryItem(url string) string {
 		return err.Error()
 	}
 	return "Removed"
+}
+
+// CheckFFmpeg checks if ffmpeg is installed
+func (a *App) CheckFFmpeg() bool {
+	return a.FFmpegManager.CheckFFmpeg()
+}
+
+// DownloadFFmpeg starts downloading ffmpeg
+func (a *App) DownloadFFmpeg() string {
+	err := a.FFmpegManager.DownloadFFmpeg()
+	if err != nil {
+		return err.Error()
+	}
+	return "Started"
+}
+
+// GetFFmpegDownloadProgress returns the current download progress
+func (a *App) GetFFmpegDownloadProgress() map[string]interface{} {
+	progress, status := a.FFmpegManager.GetDownloadProgress()
+	return map[string]interface{}{
+		"progress": progress,
+		"status":   status,
+	}
+}
+
+// CancelFFmpegDownload cancels the download
+func (a *App) CancelFFmpegDownload() {
+	a.FFmpegManager.CancelDownload()
+}
+
+// GetFFmpegInfo returns the version info of ffmpeg
+func (a *App) GetFFmpegInfo() string {
+	return a.FFmpegManager.GetFFmpegInfo()
 }

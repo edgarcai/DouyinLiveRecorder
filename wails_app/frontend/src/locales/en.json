@@ -35,6 +35,22 @@
         "saving": "Saving...",
         "tabs": {
             "general": "General",
+            "system_tools": "System Tools",
+            "ffmpeg": {
+                "title": "FFmpeg Tools",
+                "status": "Status",
+                "installed": "Installed",
+                "not_installed": "Not Installed",
+                "check": "Check FFmpeg",
+                "download": "Download FFmpeg",
+                "downloading": "Downloading...",
+                "extracting": "Extracting...",
+                "error": "Error",
+                "cancel": "Cancel",
+                "version_info": "Version Info",
+                "show_details": "Show Details",
+                "hide_details": "Hide Details"
+            },
             "cookies": "Cookies",
             "push": "Push",
             "accounts": "Accounts"

@@ -35,9 +35,25 @@
         "saving": "保存中...",
         "tabs": {
             "general": "通用设置",
-            "cookies": "Cookies",
+            "system_tools": "系统工具",
+            "cookies": "Cookie配置",
             "push": "推送通知",
             "accounts": "账号管理"
+        },
+        "ffmpeg": {
+            "title": "FFmpeg 工具",
+            "status": "状态",
+            "installed": "已安装",
+            "not_installed": "未安装",
+            "check": "检查 FFmpeg",
+            "download": "下载 FFmpeg",
+            "downloading": "下载中...",
+            "extracting": "解压中...",
+            "error": "错误",
+            "cancel": "取消",
+            "version_info": "版本信息",
+            "show_details": "显示详情",
+            "hide_details": "隐藏详情"
         },
         "subtitle": {
             "general": "配置基本录制参数",

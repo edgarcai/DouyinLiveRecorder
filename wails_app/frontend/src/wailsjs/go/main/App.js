@@ -6,8 +6,28 @@ export function AddUrl(arg1) {
   return window['go']['main']['App']['AddUrl'](arg1);
 }
 
+export function CancelFFmpegDownload() {
+  return window['go']['main']['App']['CancelFFmpegDownload']();
+}
+
+export function CheckFFmpeg() {
+  return window['go']['main']['App']['CheckFFmpeg']();
+}
+
+export function DownloadFFmpeg() {
+  return window['go']['main']['App']['DownloadFFmpeg']();
+}
+
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
+}
+
+export function GetFFmpegDownloadProgress() {
+  return window['go']['main']['App']['GetFFmpegDownloadProgress']();
+}
+
+export function GetFFmpegInfo() {
+  return window['go']['main']['App']['GetFFmpegInfo']();
 }
 
 export function GetHistory() {

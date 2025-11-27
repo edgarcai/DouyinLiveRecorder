@@ -1,7 +1,7 @@
 <script setup>
 import {reactive, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {GetConfig, UpdateConfig} from '../wailsjs/go/main/App.js'
+import {GetConfig, UpdateConfig, CheckFFmpeg, DownloadFFmpeg, GetFFmpegDownloadProgress, CancelFFmpegDownload, GetFFmpegInfo} from '../wailsjs/go/main/App.js'
 
 const { t } = useI18n()
 
@@ -49,7 +49,66 @@ onMounted(() => {
       saveConfig()
     }, {deep: true})
   })
+  
+  checkFFmpeg()
 })
+
+const ffmpegStatus = reactive({
+  installed: false,
+  downloading: false,
+  progress: 0,
+  statusText: '',
+  versionInfo: '',
+  showDetails: false
+})
+
+let progressInterval
+
+const checkFFmpeg = () => {
+  CheckFFmpeg().then(installed => {
+    ffmpegStatus.installed = installed
+    if (installed) {
+        GetFFmpegInfo().then(info => {
+            ffmpegStatus.versionInfo = info
+        })
+    }
+  })
+}
+
+const startDownload = () => {
+  ffmpegStatus.downloading = true
+  DownloadFFmpeg().then(result => {
+    if (result !== 'Started') {
+        ffmpegStatus.downloading = false
+        saveStatus.value = result // Show error
+    } else {
+        startProgressPolling()
+    }
+  })
+}
+
+const startProgressPolling = () => {
+    if (progressInterval) clearInterval(progressInterval)
+    progressInterval = setInterval(() => {
+        GetFFmpegDownloadProgress().then(res => {
+            ffmpegStatus.progress = res.progress
+            ffmpegStatus.statusText = res.status
+            if (res.status === 'completed') {
+                clearInterval(progressInterval)
+                ffmpegStatus.downloading = false
+                ffmpegStatus.installed = true
+                checkFFmpeg()
+            } else if (res.status === 'error' || res.status === 'cancelled') {
+                clearInterval(progressInterval)
+                ffmpegStatus.downloading = false
+            }
+        })
+    }, 500)
+}
+
+const cancelDownload = () => {
+    CancelFFmpegDownload()
+}
 </script>
 
 <template>
@@ -72,7 +131,7 @@ onMounted(() => {
       <div class="tabs-container">
         <div class="tabs">
           <button 
-            v-for="tab in ['general', 'cookies', 'push', 'accounts']" 
+            v-for="tab in ['general', 'cookies', 'push', 'accounts', 'system_tools']" 
             :key="tab"
             :class="{active: activeTab === tab}" 
             @click="activeTab = tab"
@@ -235,6 +294,51 @@ onMounted(() => {
             <div class="form-group">
               <label>{{ $t('config.accounts.flextv_password') }}</label>
               <input type="password" v-model="config.Accounts.FlextvPassword" />
+            </div>
+          </div>
+        </div>
+
+        <!-- System Tools -->
+        <div v-else-if="activeTab === 'system_tools'" class="card settings-card">
+          <div class="card-header">
+            <h3>{{ $t('config.ffmpeg.title') }}</h3>
+          </div>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>{{ $t('config.ffmpeg.status') }}</label>
+              <div class="status-display">
+                <span :class="['status-badge', ffmpegStatus.installed ? 'installed' : 'not-installed']">
+                  {{ ffmpegStatus.installed ? $t('config.ffmpeg.installed') : $t('config.ffmpeg.not_installed') }}
+                </span>
+                <button v-if="!ffmpegStatus.installed && !ffmpegStatus.downloading" @click="startDownload" class="action-btn">
+                  {{ $t('config.ffmpeg.download') }}
+                </button>
+                <button v-if="ffmpegStatus.downloading" @click="cancelDownload" class="action-btn cancel">
+                  {{ $t('config.ffmpeg.cancel') }}
+                </button>
+              </div>
+              
+              <div v-if="ffmpegStatus.downloading" class="progress-container">
+                <div class="progress-info">
+                  <span>{{ $t('config.ffmpeg.' + (ffmpegStatus.statusText === 'extracting' ? 'extracting' : 'downloading')) }}</span>
+                  <span>{{ ffmpegStatus.progress.toFixed(1) }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{width: ffmpegStatus.progress + '%'}"></div>
+                </div>
+              </div>
+
+              <div v-if="ffmpegStatus.installed && ffmpegStatus.versionInfo" class="version-info-container">
+                <div class="version-header">
+                    <label>{{ $t('config.ffmpeg.version_info') }}</label>
+                    <button @click="ffmpegStatus.showDetails = !ffmpegStatus.showDetails" class="text-btn">
+                        {{ ffmpegStatus.showDetails ? $t('config.ffmpeg.hide_details') : $t('config.ffmpeg.show_details') }}
+                    </button>
+                </div>
+                <transition name="fade">
+                    <pre v-if="ffmpegStatus.showDetails" class="version-output">{{ ffmpegStatus.versionInfo }}</pre>
+                </transition>
+              </div>
             </div>
           </div>
         </div>
@@ -447,5 +551,114 @@ textarea {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-badge.installed {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+
+.status-badge.not-installed {
+  background: #fef0f0;
+  color: #f56c6c;
+}
+
+.action-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.action-btn:hover {
+  opacity: 0.9;
+}
+
+.action-btn.cancel {
+  background: #909399;
+}
+
+.progress-container {
+  margin-top: 16px;
+  background: #f5f7fa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.version-info-container {
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+.version-output {
+  background: #2d2d2d;
+  color: #ccc;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0;
 }
 </style>

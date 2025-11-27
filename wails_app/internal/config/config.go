@@ -51,6 +51,7 @@ type RecordingSettings struct {
 	CustomScriptCmd            string  `ini:"自定义脚本执行命令"`
 	ProxyPlatforms             string  `ini:"使用代理录制的平台(逗号分隔)"`
 	ExtraProxyPlatforms        string  `ini:"额外使用代理录制的平台(逗号分隔)"`
+	FFmpegPath                 string  `ini:"ffmpeg路径"`
 }
 
 type PushSettings struct {

@@ -5,7 +5,17 @@ import {recorder} from '../models';
 
 export function AddUrl(arg1:string):Promise<string>;
 
+export function CancelFFmpegDownload():Promise<void>;
+
+export function CheckFFmpeg():Promise<boolean>;
+
+export function DownloadFFmpeg():Promise<string>;
+
 export function GetConfig():Promise<config.Configuration>;
+
+export function GetFFmpegDownloadProgress():Promise<Record<string, any>>;
+
+export function GetFFmpegInfo():Promise<string>;
 
 export function GetHistory():Promise<Array<config.HistoryItem>>;
 
