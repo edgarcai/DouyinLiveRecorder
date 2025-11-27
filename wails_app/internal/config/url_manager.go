@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -50,6 +51,11 @@ func (m *URLManager) Load() error {
 func (m *URLManager) Save() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	dir := filepath.Dir(m.FilePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
 
 	file, err := os.Create(m.FilePath)
 	if err != nil {

@@ -1,17 +1,24 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
 import {useI18n} from 'vue-i18n'
 import {EventsOn} from '../wailsjs/runtime/runtime.js'
 
 const { t } = useI18n()
 const logs = ref([])
+const activeTab = ref('running') // 'running' or 'operation'
 const logContainer = ref(null)
+
+const filteredLogs = computed(() => {
+  return logs.value.filter(log => log.type === activeTab.value)
+})
 
 const addLog = (msg) => {
   const time = new Date().toLocaleTimeString()
   logs.value.push({
     time,
-    content: msg,
+    content: msg.message || msg,
+    type: msg.type || 'running',
+    level: msg.level || 'INFO',
     id: Date.now() + Math.random()
   })
   
@@ -29,7 +36,7 @@ const addLog = (msg) => {
 }
 
 const copyLogs = () => {
-  const text = logs.value.map(l => `[${l.time}] ${l.content}`).join('\n')
+  const text = filteredLogs.value.map(l => `[${l.time}] [${l.level}] ${l.content}`).join('\n')
   navigator.clipboard.writeText(text)
 }
 
@@ -37,7 +44,7 @@ onMounted(() => {
   EventsOn("log", (msg) => {
     addLog(msg)
   })
-  addLog(t('logs.init'))
+  // addLog(t('logs.init'))
 })
 </script>
 
@@ -47,7 +54,21 @@ onMounted(() => {
       <div class="card-header">
         <div class="header-left">
           <h2>{{ $t('logs.title') }}</h2>
-          <span class="log-count">{{ logs.length }} {{ $t('logs.lines') }}</span>
+          <div class="tabs">
+            <button 
+              :class="['tab-btn', { active: activeTab === 'running' }]"
+              @click="activeTab = 'running'"
+            >
+              {{ $t('logs.running_logs') || '运行日志' }}
+            </button>
+            <button 
+              :class="['tab-btn', { active: activeTab === 'operation' }]"
+              @click="activeTab = 'operation'"
+            >
+              {{ $t('logs.operation_logs') || '操作日志' }}
+            </button>
+          </div>
+          <span class="log-count">{{ filteredLogs.length }} {{ $t('logs.lines') }}</span>
         </div>
         <div class="actions">
           <button @click="copyLogs" class="action-btn" :title="$t('logs.copy_tooltip')">
@@ -60,10 +81,10 @@ onMounted(() => {
       </div>
       
       <div class="log-container" ref="logContainer">
-        <div v-if="logs.length === 0" class="empty-logs">
+        <div v-if="filteredLogs.length === 0" class="empty-logs">
           {{ $t('logs.empty') }}
         </div>
-        <div v-else v-for="log in logs" :key="log.id" class="log-line">
+        <div v-else v-for="log in filteredLogs" :key="log.id" class="log-line">
           <span class="log-time">[{{ log.time }}]</span>
           <span class="log-content">{{ log.content }}</span>
         </div>
@@ -104,7 +125,37 @@ onMounted(() => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  background: #f0f2f5;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: white;
+  color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  font-weight: 500;
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--text-primary);
 }
 
 h2 {

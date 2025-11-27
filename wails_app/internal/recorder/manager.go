@@ -12,10 +12,9 @@ import (
 	"syscall"
 	"time"
 	"wails_app/internal/config"
+	"wails_app/internal/logger"
 	"wails_app/internal/pkg/push"
 	"wails_app/internal/spider"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type Manager struct {
@@ -51,11 +50,8 @@ func (m *Manager) UpdateConfig(cfg *config.Configuration) {
 }
 
 func (m *Manager) Log(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	fmt.Println(msg) // Keep stdout
-	if m.ctx != nil {
-		runtime.EventsEmit(m.ctx, "log", msg)
-	}
+	// Use new logger
+	logger.Info(logger.LogTypeRunning, format, args...)
 }
 
 func (m *Manager) StartRecording(url string) error {

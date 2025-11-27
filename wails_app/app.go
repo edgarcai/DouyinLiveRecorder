@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"wails_app/internal/config"
+	"wails_app/internal/logger"
 	"wails_app/internal/recorder"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -29,6 +30,10 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	// Initialize Logger
+	logger.Init(ctx)
+	logger.Info(logger.LogTypeOperation, "App started")
+
 	// Load config
 	cfgPath := config.GetDefaultConfigPath()
 	if cfgPath != "" {
@@ -94,6 +99,7 @@ func (a *App) UpdateConfig(cfg *config.Configuration) string {
 	// Update manager
 	a.RecorderManager.UpdateConfig(cfg)
 
+	logger.Info(logger.LogTypeOperation, "Configuration updated")
 	return "Saved"
 }
 
@@ -101,6 +107,7 @@ func (a *App) UpdateConfig(cfg *config.Configuration) string {
 func (a *App) ToggleMiniMode(mini bool) {
 	if mini {
 		// Switch to mini mode
+		logger.Info(logger.LogTypeOperation, "Switched to mini mode")
 		runtime.WindowSetSize(a.ctx, 60, 60)
 		runtime.WindowSetAlwaysOnTop(a.ctx, true)
 
@@ -118,6 +125,7 @@ func (a *App) ToggleMiniMode(mini bool) {
 		a.UpdateConfig(a.Config)
 
 		// Switch to normal mode
+		logger.Info(logger.LogTypeOperation, "Switched to normal mode")
 		runtime.WindowSetSize(a.ctx, 1200, 800)
 		runtime.WindowSetAlwaysOnTop(a.ctx, false)
 		runtime.WindowCenter(a.ctx)
@@ -155,6 +163,7 @@ func (a *App) AddUrl(url string) string {
 	}
 	// Also start recording
 	go a.RecorderManager.StartRecording(url)
+	logger.Info(logger.LogTypeOperation, "Added URL: %s", url)
 	return "Added"
 }
 
@@ -166,6 +175,7 @@ func (a *App) RemoveUrl(url string) string {
 	}
 	// Also stop recording
 	a.RecorderManager.StopRecording(url)
+	logger.Info(logger.LogTypeOperation, "Removed URL: %s", url)
 	return "Removed"
 }
 
