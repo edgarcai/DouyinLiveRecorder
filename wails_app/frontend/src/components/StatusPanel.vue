@@ -17,7 +17,14 @@ const updateStatus = () => {
   GetUrls().then(urls => {
     state.urls = urls || []
     GetRecordingStatus().then(result => {
-      state.statusMap = result
+      // Convert array to map for easy lookup
+      const map = {}
+      if (result) {
+        result.forEach(item => {
+          map[item.url] = item
+        })
+      }
+      state.statusMap = map
     })
   })
 }
@@ -46,7 +53,9 @@ const stop = (url) => {
 }
 
 const getStatus = (url) => {
-  const status = state.statusMap[url] || 'Stopped'
+  const info = state.statusMap[url]
+  const status = info ? info.status : 'Stopped'
+  
   if (status.includes('Recording')) return 'recording'
   if (status.includes('Monitoring')) return 'monitoring'
   if (status.includes('Stopped')) return 'stopped'
@@ -56,7 +65,8 @@ const getStatus = (url) => {
 
 const getStatusText = (url) => {
   const key = getStatus(url)
-  return key === 'error' ? state.statusMap[url] : key
+  const info = state.statusMap[url]
+  return key === 'error' ? (info ? info.status : 'Error') : key
 }
 
 const getStatusClass = (statusKey) => {
@@ -147,7 +157,13 @@ onUnmounted(() => {
         <transition-group name="list">
           <li v-for="url in state.urls" :key="url" class="list-item">
             <div class="item-content">
-              <div class="url-text" :title="url">{{ url }}</div>
+              <div class="url-info">
+                <div class="url-text" :title="url">{{ url }}</div>
+                <div v-if="state.statusMap[url] && state.statusMap[url].title" class="meta-info">
+                  <span class="meta-anchor">{{ state.statusMap[url].anchor_name }}</span>
+                  <span class="meta-title">{{ state.statusMap[url].title }}</span>
+                </div>
+              </div>
               <div class="status-badge" :class="getStatusClass(getStatus(url))">
                 <span class="status-dot"></span>
                 {{ getStatus(url) === 'error' ? getStatusText(url) : $t('status.' + getStatus(url)) }}
@@ -351,8 +367,30 @@ onUnmounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-size: 14px;
+}
+
+.meta-info {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.meta-anchor {
+  font-weight: 600;
+  color: var(--primary-color);
+  background: rgba(21, 101, 192, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.meta-title {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-badge {

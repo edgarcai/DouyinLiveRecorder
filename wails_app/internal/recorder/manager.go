@@ -27,11 +27,22 @@ type Manager struct {
 }
 
 type RecordingSession struct {
-	Url       string
-	Platform  string
-	StartTime time.Time
-	Status    string
-	StopChan  chan struct{}
+	Url        string
+	Platform   string
+	StartTime  time.Time
+	Status     string
+	StopChan   chan struct{}
+	Title      string
+	AnchorName string
+}
+
+type ActiveRecording struct {
+	Url        string    `json:"url"`
+	Status     string    `json:"status"`
+	Title      string    `json:"title"`
+	AnchorName string    `json:"anchor_name"`
+	Platform   string    `json:"platform"`
+	StartTime  time.Time `json:"start_time"`
 }
 
 func NewManager(ctx context.Context, cfg *config.Configuration, historyManager *config.HistoryManager) *Manager {
@@ -150,6 +161,8 @@ func (m *Manager) runRecording(session *RecordingSession) {
 
 		// Stream is live!
 		session.Status = "Recording"
+		session.Title = streamInfo.Title
+		session.AnchorName = streamInfo.AnchorName
 		m.Log("Starting recording for %s from %s", session.Url, streamInfo.Url)
 
 		// Update History with metadata
@@ -357,13 +370,20 @@ func (m *Manager) runRecording(session *RecordingSession) {
 	}
 }
 
-func (m *Manager) GetActiveRecordings() map[string]string {
+func (m *Manager) GetActiveRecordings() []ActiveRecording {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	result := make(map[string]string)
-	for url, session := range m.activeRecordings {
-		result[url] = session.Status
+	var result []ActiveRecording
+	for _, session := range m.activeRecordings {
+		result = append(result, ActiveRecording{
+			Url:        session.Url,
+			Status:     session.Status,
+			Title:      session.Title,
+			AnchorName: session.AnchorName,
+			Platform:   session.Platform,
+			StartTime:  session.StartTime,
+		})
 	}
 	return result
 }

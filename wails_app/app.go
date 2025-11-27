@@ -157,7 +157,7 @@ func (a *App) StopRecording(url string) string {
 }
 
 // GetRecordingStatus returns the status of all active recordings
-func (a *App) GetRecordingStatus() map[string]string {
+func (a *App) GetRecordingStatus() []recorder.ActiveRecording {
 	return a.RecorderManager.GetActiveRecordings()
 }
 
