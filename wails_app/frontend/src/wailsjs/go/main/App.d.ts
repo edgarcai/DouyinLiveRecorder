@@ -29,6 +29,8 @@ export function RemoveHistoryItem(arg1:string):Promise<string>;
 
 export function RemoveUrl(arg1:string):Promise<string>;
 
+export function SaveWindowState():Promise<void>;
+
 export function StartRecording(arg1:string):Promise<string>;
 
 export function StopRecording(arg1:string):Promise<string>;

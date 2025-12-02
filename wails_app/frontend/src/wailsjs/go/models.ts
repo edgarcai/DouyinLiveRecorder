@@ -45,6 +45,10 @@ export namespace config {
 	export class WindowSettings {
 	    MiniPosX: number;
 	    MiniPosY: number;
+	    Width: number;
+	    Height: number;
+	    X: number;
+	    Y: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new WindowSettings(source);
@@ -54,6 +58,10 @@ export namespace config {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.MiniPosX = source["MiniPosX"];
 	        this.MiniPosY = source["MiniPosY"];
+	        this.Width = source["Width"];
+	        this.Height = source["Height"];
+	        this.X = source["X"];
+	        this.Y = source["Y"];
 	    }
 	}
 	export class Cookies {

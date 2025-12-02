@@ -7,7 +7,7 @@ const quit = () => Quit()
 </script>
 
 <template>
-  <div class="titlebar" style="--wails-draggable:drag">
+  <div class="titlebar" style="--wails-draggable:drag" @dblclick="maximise">
     <div class="title-content">
       <div class="app-icon">🔴</div>
       <div class="app-title">{{ $t('app.title') }}</div>

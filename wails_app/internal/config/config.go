@@ -19,6 +19,10 @@ type Configuration struct {
 type WindowSettings struct {
 	MiniPosX int `ini:"悬浮球X坐标"`
 	MiniPosY int `ini:"悬浮球Y坐标"`
+	Width    int `ini:"窗口宽度"`
+	Height   int `ini:"窗口高度"`
+	X        int `ini:"窗口X坐标"`
+	Y        int `ini:"窗口Y坐标"`
 }
 
 type RecordingSettings struct {

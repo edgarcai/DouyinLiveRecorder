@@ -79,6 +79,14 @@ func (a *App) startup(ctx context.Context) {
 	for _, url := range a.UrlManager.GetURLs() {
 		go a.RecorderManager.StartRecording(url)
 	}
+
+	// Restore window state
+	if a.Config.WindowSettings.Width > 0 && a.Config.WindowSettings.Height > 0 {
+		runtime.WindowSetSize(a.ctx, a.Config.WindowSettings.Width, a.Config.WindowSettings.Height)
+	}
+	if a.Config.WindowSettings.X != 0 || a.Config.WindowSettings.Y != 0 {
+		runtime.WindowSetPosition(a.ctx, a.Config.WindowSettings.X, a.Config.WindowSettings.Y)
+	}
 }
 
 // Greet returns a greeting for the given name
@@ -137,10 +145,47 @@ func (a *App) ToggleMiniMode(mini bool) {
 
 		// Switch to normal mode
 		logger.Info(logger.LogTypeOperation, "Switched to normal mode")
-		runtime.WindowSetSize(a.ctx, 1200, 800)
+
+		// Restore normal window size and position if saved
+		width := a.Config.WindowSettings.Width
+		height := a.Config.WindowSettings.Height
+		if width == 0 || height == 0 {
+			width = 1200
+			height = 800
+		}
+		runtime.WindowSetSize(a.ctx, width, height)
+
+		if a.Config.WindowSettings.X != 0 || a.Config.WindowSettings.Y != 0 {
+			runtime.WindowSetPosition(a.ctx, a.Config.WindowSettings.X, a.Config.WindowSettings.Y)
+		} else {
+			runtime.WindowCenter(a.ctx)
+		}
+
 		runtime.WindowSetAlwaysOnTop(a.ctx, false)
-		runtime.WindowCenter(a.ctx)
 	}
+}
+
+// SaveWindowState saves the current window state
+func (a *App) SaveWindowState() {
+	if a.ctx == nil {
+		return
+	}
+
+	// Don't save if in mini mode
+	// We can check window size to guess mode, or track state
+	// For now, let's assume if size is small it's mini mode
+	w, h := runtime.WindowGetSize(a.ctx)
+	if w < 200 && h < 200 {
+		return
+	}
+
+	x, y := runtime.WindowGetPosition(a.ctx)
+	a.Config.WindowSettings.Width = w
+	a.Config.WindowSettings.Height = h
+	a.Config.WindowSettings.X = x
+	a.Config.WindowSettings.Y = y
+
+	a.UpdateConfig(a.Config)
 }
 
 // StartRecording starts recording a URL

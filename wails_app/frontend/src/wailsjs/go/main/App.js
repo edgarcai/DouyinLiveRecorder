@@ -54,6 +54,10 @@ export function RemoveUrl(arg1) {
   return window['go']['main']['App']['RemoveUrl'](arg1);
 }
 
+export function SaveWindowState() {
+  return window['go']['main']['App']['SaveWindowState']();
+}
+
 export function StartRecording(arg1) {
   return window['go']['main']['App']['StartRecording'](arg1);
 }
