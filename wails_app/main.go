@@ -19,8 +19,8 @@ func main() {
 	// 使用选项创建应用程序
 	err := wails.Run(&options.App{
 		Title:  "DouyinLiveRecorder",
-		Width:  500,
-		Height: 300,
+		Width:  800,
+		Height: 450,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

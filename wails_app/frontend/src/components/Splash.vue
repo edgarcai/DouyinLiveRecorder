@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { CheckAppUpdate, StartAppUpdate, GetConfig } from '../wailsjs/go/main/App'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 import logo from '../assets/images/logo-universal.png'
+import splashBg from '../assets/images/splash_bg.png'
 
 const emit = defineEmits(['ready'])
 
@@ -57,7 +58,7 @@ onMounted(async () => {
         } else {
         startApp()
         }
-    }, 1000)
+    }, 1500) // 稍微增加延迟以展示精美画面
   } catch (e) {
     console.error(e)
     startApp()
@@ -73,13 +74,13 @@ const startApp = () => {
 </script>
 
 <template>
-  <div class="splash-container">
-    <div class="bg-decoration">
-        <!-- 抽象形状或淡出的应用截图可以放在这里 -->
-    </div>
+  <div class="splash-container" :style="{ backgroundImage: `url(${splashBg})` }">
+    <div class="overlay"></div>
     <div class="content">
-      <img :src="logo" class="logo" alt="Logo" />
-      <h1 class="title">{{ appTitle }}</h1>
+      <div class="header-group">
+        <img :src="logo" class="logo" alt="Logo" />
+        <h1 class="title">{{ appTitle }}</h1>
+      </div>
       
       <div class="status-area">
         <div v-if="showProgress" class="progress-bar-container">
@@ -95,70 +96,104 @@ const startApp = () => {
 .splash-container {
   width: 100vw;
   height: 100vh;
-  background: var(--bg-color);
+  background-color: #000;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align content to bottom */
   align-items: center;
-  justify-content: center;
   user-select: none;
   position: relative;
   overflow: hidden;
 }
 
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Linear gradient from bottom to allow text readability but keep top clear */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 100%);
+  z-index: 1;
+}
+
 .content {
-  text-align: center;
-  width: 80%;
-  max-width: 400px;
+  width: 100%;
+  padding: 0 40px 60px 40px; /* Padding from bottom */
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: slideUp 0.8s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .logo {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 16px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(255, 44, 85, 0.15);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .title {
   font-size: 24px;
-  color: var(--text-primary);
-  margin-bottom: 60px;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  margin: 0; /* Remove default margin */
+  /* Remove gradient text for better readability against complex background */
 }
 
 .status-area {
   width: 100%;
-  padding: 0 20px;
+  max-width: 400px;
 }
 
 .progress-bar-container {
   width: 100%;
-  height: 6px;
-  background: rgba(0,0,0,0.05);
-  border-radius: 3px;
+  height: 4px; /* Thinner progress bar */
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
   overflow: hidden;
   margin-bottom: 12px;
+  backdrop-filter: blur(4px);
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
+  background: #ff2c55; /* Solid color for better visibility */
+  box-shadow: 0 0 10px rgba(255, 44, 85, 0.8);
   transition: width 0.1s linear;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .status-text {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
-  font-weight: 500;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .status-text.loading {
-  color: var(--primary-color);
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 </style>
