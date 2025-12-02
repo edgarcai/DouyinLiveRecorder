@@ -41,8 +41,8 @@ func (d *DouyuSpider) SetCookies(cookies string) {
 }
 
 func (d *DouyuSpider) GetStreamUrl(url string) (*StreamInfo, error) {
-	// Logic ported from get_douyu_stream_data
-	// 1. Get Room ID
+	// 逻辑移植自 get_douyu_stream_data
+	// 1. 获取房间 ID
 	rid := ""
 	reRid := regexp.MustCompile(`rid=(\d+)`)
 	matches := reRid.FindStringSubmatch(url)
@@ -61,7 +61,7 @@ func (d *DouyuSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("cannot find room id")
 	}
 
-	// 2. Get Info (to check if live)
+	// 2. 获取信息（检查是否直播）
 	// https://www.douyu.com/betard/{rid}
 	infoUrl := fmt.Sprintf("https://www.douyu.com/betard/%s", rid)
 	req, _ := http.NewRequest("GET", infoUrl, nil)
@@ -89,33 +89,33 @@ func (d *DouyuSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("room is not live")
 	}
 
-	// 3. Get Stream Data (Sign logic)
-	// The python code uses execjs to run some JS logic for signature.
-	// This is complex to port 1:1 without a JS engine.
-	// However, for Douyu, often the mobile API or a simpler API works without complex JS if we have the right headers/did.
-	// Python code uses: https://m.douyu.com/3125893?rid=...
-	// And extracts a JS function `ub98484234`.
+	// 3. 获取流数据（签名逻辑）
+	// python 代码使用 execjs 运行一些 JS 逻辑进行签名。
+	// 如果没有 JS 引擎，这很难 1:1 移植。
+	// 但是，对于斗鱼，通常移动 API 或更简单的 API 在没有复杂 JS 的情况下也可以工作，只要我们有正确的 headers/did。
+	// Python 代码使用: https://m.douyu.com/3125893?rid=...
+	// 并提取 JS 函数 `ub98484234`。
 
-	// Simplified approach: Try to use the mobile web API which might be more lenient or use a fixed DID.
-	// Actually, the Python code implements a full JS reversal in `get_token_js`.
-	// It extracts a function, modifies it, and runs it.
-	// Since we can't run JS, we might be stuck unless we find a pure Go implementation or a different API.
+	// 简化方法：尝试使用可能更宽松或使用固定 DID 的移动 Web API。
+	// 实际上，Python 代码在 `get_token_js` 中实现了完整的 JS 逆向。
+	// 它提取一个函数，修改它，并运行它。
+	// 由于我们无法运行 JS，除非我们找到纯 Go 实现或不同的 API，否则我们可能会陷入困境。
 
-	// ALTERNATIVE: Use the H5 mobile API directly which sometimes gives a link without complex sign?
-	// Or try to fetch the HLS link directly if available in the page source.
+	// 替代方案：直接使用 H5 移动 API，有时会给出没有复杂签名的链接？
+	// 或者尝试直接从页面源代码中获取 HLS 链接（如果可用）。
 
-	// Let's try the `h5_m_station` API which is often easier.
+	// 让我们尝试通常更容易的 `h5_m_station` API。
 	// POST https://playweb.douyucdn.cn/lapi/live/hlsH5Preview/{rid}
 
 	// timestamp := time.Now().UnixNano() / 1e6
 	// did := "10000000000000000000000000001501"
 	// auth	sign := douyuMd5Sum(fmt.Sprintf("%s%s%s%s", roomId, did, timestamp, "2501"))
 
-	// Note: Douyu signature is notoriously hard to maintain without JS.
-	// For this task, I will implement a placeholder that warns about JS requirement,
-	// OR try a known simpler endpoint.
+	// 注意：如果没有 JS，斗鱼签名众所周知很难维护。
+	// 对于此任务，我将实现一个占位符，警告有关 JS 要求，
+	// 或者尝试一个已知的更简单的端点。
 
-	// Let's try to fetch from the m.douyu.com page source which sometimes has the live url in JSON.
+	// 让我们尝试从 m.douyu.com 页面源代码中获取，有时 JSON 中包含直播 url。
 	mobileUrl := fmt.Sprintf("https://m.douyu.com/%s", rid)
 	reqM, _ := http.NewRequest("GET", mobileUrl, nil)
 	reqM.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1")
@@ -127,7 +127,7 @@ func (d *DouyuSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	bodyM, _ := io.ReadAll(respM.Body)
 	htmlM := string(bodyM)
 
-	// Look for "room_url" or similar in JSON
+	// 在 JSON 中查找 "room_url" 或类似内容
 	reRoomUrl := regexp.MustCompile(`"url":"(http.*?\.m3u8.*?)"`)
 	matchesM := reRoomUrl.FindStringSubmatch(htmlM)
 	if len(matchesM) > 1 {

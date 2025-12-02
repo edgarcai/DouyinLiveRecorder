@@ -47,7 +47,7 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	}
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2")
-	req.Header.Set("Cookie", "did=web_e988652e11b545469633396abe85a89f; didv=1796004001000") // Basic cookie
+	req.Header.Set("Cookie", "did=web_e988652e11b545469633396abe85a89f; didv=1796004001000") // 基本 cookie
 
 	resp, err := k.Client.Do(req)
 	if err != nil {
@@ -61,7 +61,7 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	}
 	htmlStr := string(bodyBytes)
 
-	// Extract window.__INITIAL_STATE__
+	// 提取 window.__INITIAL_STATE__
 	// <script>window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s;
 	re := regexp.MustCompile(`<script>window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s;`)
 	matches := re.FindStringSubmatch(htmlStr)
@@ -75,18 +75,18 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("failed to parse stream info: %v", err)
 	}
 
-	// Navigate JSON: liveroom -> liveStream -> playUrls -> h264 -> adaptationSet -> representation
-	// Note: The structure might vary based on the Python code analysis
-	// Python code: play_list = re.findall('(\\{"liveStream".*?),"gameInfo', json_str)[0] + "}"
+	// 导航 JSON: liveroom -> liveStream -> playUrls -> h264 -> adaptationSet -> representation
+	// 注意：结构可能会根据 Python 代码分析而有所不同
+	// Python 代码: play_list = re.findall('(\\{"liveStream".*?),"gameInfo', json_str)[0] + "}"
 
 	liveStreamObj, ok := data["liveStream"].(map[string]interface{})
 	if !ok {
-		// Try to find it in a nested structure if needed, or maybe the regex captured a different level
+		// 如果需要，尝试在嵌套结构中查找，或者正则表达式可能捕获了不同的级别
 		return nil, fmt.Errorf("liveStream not found in INITIAL_STATE")
 	}
 
 	playUrls, ok := liveStreamObj["playUrls"].(map[string]interface{})
-	if !ok || len(playUrls) == 0 { // Combined condition for not found or empty
+	if !ok || len(playUrls) == 0 { // 未找到或为空的组合条件
 		return nil, fmt.Errorf("playUrls is empty")
 	}
 
@@ -105,7 +105,7 @@ func (k *KuaishouSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("representation is empty")
 	}
 
-	// Iterate to find the best quality (usually the first one or check bitrate)
+	// 迭代以找到最佳质量（通常是第一个或检查比特率）
 	for _, rep := range representation {
 		repMap, ok := rep.(map[string]interface{})
 		if !ok {

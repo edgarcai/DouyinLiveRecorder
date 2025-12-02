@@ -28,7 +28,7 @@ const debounce = (fn, delay) => {
 const saveConfig = debounce(() => {
   saveStatus.value = t('config.saving')
   UpdateConfig(config).then(result => {
-    saveStatus.value = result // "Saved" or error message
+    saveStatus.value = result // "Saved" 或错误消息
     setTimeout(() => {
       if (saveStatus.value === 'Saved') {
         saveStatus.value = ''
@@ -44,7 +44,7 @@ onMounted(() => {
     }
     loading.value = false
     
-    // Start watching after initial load
+    // 初始加载后开始监听
     watch(config, () => {
       saveConfig()
     }, {deep: true})
@@ -80,7 +80,7 @@ const startDownload = () => {
   DownloadFFmpeg().then(result => {
     if (result !== 'Started') {
         ffmpegStatus.downloading = false
-        saveStatus.value = result // Show error
+        saveStatus.value = result // 显示错误
     } else {
         startProgressPolling()
     }
@@ -142,7 +142,7 @@ const cancelDownload = () => {
       </div>
 
       <transition name="fade" mode="out-in">
-        <!-- General Settings -->
+        <!-- 常规设置 -->
         <div v-if="activeTab === 'general'" class="card settings-card">
           <div class="card-header">
             <h3>{{ $t('config.tabs.general') }}</h3>
@@ -228,7 +228,7 @@ const cancelDownload = () => {
           </div>
         </div>
         
-        <!-- Cookies -->
+        <!-- Cookie 设置 -->
         <div v-else-if="activeTab === 'cookies'" class="card settings-card">
           <div class="card-header">
             <h3>{{ $t('config.tabs.cookies') }}</h3>
@@ -242,7 +242,7 @@ const cancelDownload = () => {
           </div>
         </div>
 
-        <!-- Push Settings -->
+        <!-- 推送设置 -->
         <div v-else-if="activeTab === 'push'" class="card settings-card">
           <div class="card-header">
             <h3>{{ $t('config.tabs.push') }}</h3>
@@ -272,7 +272,7 @@ const cancelDownload = () => {
           </div>
         </div>
 
-        <!-- Accounts -->
+        <!-- 账号设置 -->
         <div v-else-if="activeTab === 'accounts'" class="card settings-card">
           <div class="card-header">
             <h3>{{ $t('config.tabs.accounts') }}</h3>
@@ -298,7 +298,7 @@ const cancelDownload = () => {
           </div>
         </div>
 
-        <!-- System Tools -->
+        <!-- 系统工具 -->
         <div v-else-if="activeTab === 'system_tools'" class="card settings-card">
           <div class="card-header">
             <h3>{{ $t('config.ffmpeg.title') }}</h3>
@@ -542,7 +542,7 @@ textarea {
   margin-top: 4px;
 }
 
-/* Transitions */
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

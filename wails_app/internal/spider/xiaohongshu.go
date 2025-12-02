@@ -27,7 +27,7 @@ func (s *XiaohongshuSpider) SetCookies(cookies string) {
 }
 
 func (s *XiaohongshuSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
-	// 1. Handle xhslink.com redirection
+	// 1. 处理 xhslink.com 重定向
 	if strings.Contains(targetUrl, "xhslink.com") {
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -38,7 +38,7 @@ func (s *XiaohongshuSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) 
 		if err != nil {
 			return nil, err
 		}
-		// Mimic headers from Python
+		// 模仿 Python 中的 Headers
 		req.Header.Set("User-Agent", "ios/7.830 (ios 17.0; ; iPhone 15 (A2846/A3089/A3090/A3092))")
 		req.Header.Set("xy-common-params", "platform=iOS&sid=session.1722166379345546829388")
 		req.Header.Set("referer", "https://app.xhs.cn/")
@@ -57,7 +57,7 @@ func (s *XiaohongshuSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) 
 		}
 	}
 
-	// 2. Fetch HTML
+	// 2. 获取 HTML
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
@@ -82,7 +82,7 @@ func (s *XiaohongshuSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) 
 	}
 	htmlStr := string(bodyBytes)
 
-	// 3. Parse JSON from window.__INITIAL_STATE__
+	// 3. 从 window.__INITIAL_STATE__ 解析 JSON
 	re := regexp.MustCompile(`<script>window.__INITIAL_STATE__=(.*?)</script>`)
 	matches := re.FindStringSubmatch(htmlStr)
 	if len(matches) < 2 {
@@ -97,26 +97,26 @@ func (s *XiaohongshuSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) 
 		return nil, fmt.Errorf("failed to parse JSON: %v", err)
 	}
 
-	// 4. Extract Stream URL
+	// 4. 提取流 URL
 	if liveStream, ok := jsonData["liveStream"].(map[string]interface{}); ok {
 		if liveStatus, ok := liveStream["liveStatus"].(string); ok && liveStatus == "success" {
 			if roomData, ok := liveStream["roomData"].(map[string]interface{}); ok {
 				if roomInfo, ok := roomData["roomInfo"].(map[string]interface{}); ok {
 					if liveLink, ok := roomInfo["deeplink"].(string); ok {
-						// Extract flvUrl param
+						// 提取 flvUrl 参数
 						// xhslink://live/room?flvUrl=...
 						reFlv := regexp.MustCompile(`flvUrl=(.*?)&`)
 						flvMatches := reFlv.FindStringSubmatch(liveLink)
 						if len(flvMatches) < 2 {
-							// Try end of string
+							// 尝试字符串结尾
 							reFlvEnd := regexp.MustCompile(`flvUrl=(.*?)$`)
 							flvMatches = reFlvEnd.FindStringSubmatch(liveLink)
 						}
 
 						if len(flvMatches) >= 2 {
 							flvUrl := flvMatches[1]
-							// Decode URL if needed, but usually it's raw
-							// Logic from Python:
+							// 如果需要，解码 URL，但通常它是原始的
+							// 逻辑来自 Python:
 							// room_id = flv_url.split('live/')[1].split('.')[0]
 							// flv_url = f"http://live-source-play.xhscdn.com/live/{room_id}.flv"
 							if strings.Contains(flvUrl, "live/") {

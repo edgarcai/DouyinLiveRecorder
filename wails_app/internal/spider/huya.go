@@ -39,9 +39,9 @@ func (h *HuyaSpider) SetCookies(cookies string) {
 }
 
 func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
-	// Logic ported from get_huya_app_stream_url (simpler and more robust than web)
-	// Extract room_id
-	// url format: https://www.huya.com/123456
+	// 逻辑移植自 get_huya_app_stream_url（比 web 更简单且更健壮）
+	// 提取 room_id
+	// url 格式: https://www.huya.com/123456
 	parts := strings.Split(targetUrl, "/")
 	if len(parts) < 2 { // Changed from < 1 to < 2
 		return nil, fmt.Errorf("invalid huya url")
@@ -57,12 +57,12 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		"accept-language": "zh-CN,zh;q=0.9",
 	}
 
-	// If room_id contains letters, we might need to resolve it, but let's try direct API first or assume numeric for now.
-	// The python code handles alphanumeric room_ids by fetching the page first.
-	// Let's implement the resolution if it's not numeric.
+	// 如果 room_id 包含字母，我们可能需要解析它，但让我们先尝试直接 API 或暂时假设为数字。
+	// python 代码通过先获取页面来处理字母数字 room_id。
+	// 如果不是数字，让我们实现解析。
 	isNumeric := regexp.MustCompile(`^\d+$`).MatchString(roomId)
 	if !isNumeric {
-		// Resolve room ID
+		// 解析房间 ID
 		req, _ := http.NewRequest("GET", targetUrl, nil)
 		req.Header.Set("User-Agent", headers["User-Agent"])
 		resp, err := h.Client.Do(req)
@@ -82,7 +82,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		}
 	}
 
-	// API Request
+	// API 请求
 	params := url.Values{}
 	params.Set("m", "Live")
 	params.Set("do", "profileRoom")
@@ -134,13 +134,13 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("stream list empty")
 	}
 
-	// Priority: TX > HW > HS > AL
+	// 优先级: TX > HW > HS > AL
 	priorityOrder := []string{"TX", "HW", "HS", "AL"}
 	var selectedFlvUrl string
 	var selectedCdnType string
 
-	// Parse all streams
-	type StreamData struct { // Renamed to avoid conflict with StreamInfo struct
+	// 解析所有流
+	type StreamData struct { // 重命名以避免与 StreamInfo 结构体冲突
 		CdnType string
 		FlvUrl  string
 	}
@@ -157,7 +157,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		streams = append(streams, StreamData{CdnType: cdnType, FlvUrl: flvUrl})
 	}
 
-	// Select best
+	// 选择最佳
 	for _, cdn := range priorityOrder {
 		for _, s := range streams {
 			if s.CdnType == cdn {
@@ -180,10 +180,10 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("no valid stream found")
 	}
 
-	// Fix URL scheme
+	// 修复 URL 协议
 	if !strings.HasPrefix(selectedFlvUrl, "http") {
-		// The python code splits by :// and adds https://, assuming it might be missing scheme or http
-		// But sFlvUrl usually comes with http. Let's ensure https.
+		// python 代码通过 :// 分割并添加 https://，假设它可能缺少协议或 http
+		// 但 sFlvUrl 通常带有 http。让我们确保 https。
 		// Python: flv_url = 'https://' + selected_flv_url.split('://')[1]
 		parts := strings.Split(selectedFlvUrl, "://")
 		if len(parts) > 1 {
@@ -191,7 +191,7 @@ func (h *HuyaSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		}
 	}
 
-	// TX specific fix
+	// TX 特定修复
 	if selectedCdnType == "TX" {
 		selectedFlvUrl = strings.Replace(selectedFlvUrl, "&ctype=tars_mp", "&ctype=huya_webh5", -1)
 		selectedFlvUrl = strings.Replace(selectedFlvUrl, "&fs=bhct", "&fs=bgct", -1)

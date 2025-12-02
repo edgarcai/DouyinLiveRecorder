@@ -1,4 +1,5 @@
 <script setup>
+// 帮助面板组件，显示使用说明和常见问题
 import {ref} from 'vue'
 
 const activeSection = ref('intro')

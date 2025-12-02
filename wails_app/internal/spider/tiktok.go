@@ -60,7 +60,7 @@ func (t *TikTokSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	}
 	htmlStr := string(bodyBytes)
 
-	// Extract SIGI_STATE
+	// 提取 SIGI_STATE
 	// <script id="SIGI_STATE" type="application/json">(.*?)</script>
 	re := regexp.MustCompile(`<script id="SIGI_STATE" type="application/json">(.*?)</script>`)
 	matches := re.FindStringSubmatch(htmlStr)
@@ -74,7 +74,7 @@ func (t *TikTokSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("failed to parse SIGI_STATE: %v", err)
 	}
 
-	// Navigate JSON: LiveRoom -> liveRoomUserInfo -> liveRoom -> streamData -> pull_data -> stream_data
+	// 导航 JSON: LiveRoom -> liveRoomUserInfo -> liveRoom -> streamData -> pull_data -> stream_data
 	liveRoom, ok := data["LiveRoom"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("LiveRoom not found")
@@ -135,7 +135,7 @@ func (t *TikTokSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("stream_data.data not found")
 	}
 
-	// Get FLV URL (sd-flv or similar)
+	// 获取 FLV URL (sd-flv 或类似)
 	// data -> sd-flv -> main -> flv
 	if sdFlv, ok := dataInner["sd-flv"].(map[string]interface{}); ok {
 		if main, ok := sdFlv["main"].(map[string]interface{}); ok {
@@ -149,7 +149,7 @@ func (t *TikTokSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		}
 	}
 
-	// Fallback loop
+	// 回退循环
 	for _, v := range dataInner {
 		if vMap, ok := v.(map[string]interface{}); ok {
 			if main, ok := vMap["main"].(map[string]interface{}); ok {

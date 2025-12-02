@@ -1,4 +1,5 @@
 <script setup>
+// 浮动球组件，用于在迷你模式下显示录制状态
 import {ref, onMounted} from 'vue'
 
 const props = defineProps({

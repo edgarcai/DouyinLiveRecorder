@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Factory creates spiders based on URL
+// Factory 根据 URL 创建爬虫
 type Factory struct {
 	spiders map[string]func() Spider
 }
@@ -27,7 +27,7 @@ func GetSpider(url string) (Spider, error) {
 	return nil, fmt.Errorf("no spider found for url: %s", url)
 }
 
-// Initialize registers all available spiders
+// InitSpiders 注册所有可用的爬虫
 func InitSpiders() {
 	Register("douyin.com", func() Spider { return NewDouyinSpider() })
 	Register("tiktok.com", func() Spider { return NewTikTokSpider() })

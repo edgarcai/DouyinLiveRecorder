@@ -160,7 +160,7 @@ type Accounts struct {
 	TwitcastingPassword string `ini:"twitcasting密码"`
 }
 
-// BackupConfig copies the config file to the backup directory with a timestamp
+// BackupConfig 将配置文件复制到备份目录并加上时间戳
 func BackupConfig(configPath string) error {
 	backupDir := filepath.Join(filepath.Dir(configPath), "backup_config")
 	if err := os.MkdirAll(backupDir, 0755); err != nil {

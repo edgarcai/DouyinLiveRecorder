@@ -10,6 +10,10 @@ export function CancelFFmpegDownload() {
   return window['go']['main']['App']['CancelFFmpegDownload']();
 }
 
+export function CheckAppUpdate() {
+  return window['go']['main']['App']['CheckAppUpdate']();
+}
+
 export function CheckFFmpeg() {
   return window['go']['main']['App']['CheckFFmpeg']();
 }
@@ -42,8 +46,20 @@ export function GetUrls() {
   return window['go']['main']['App']['GetUrls']();
 }
 
+export function GetUserInfo() {
+  return window['go']['main']['App']['GetUserInfo']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function Login(arg1, arg2) {
+  return window['go']['main']['App']['Login'](arg1, arg2);
+}
+
+export function Logout() {
+  return window['go']['main']['App']['Logout']();
 }
 
 export function RemoveHistoryItem(arg1) {
@@ -54,8 +70,16 @@ export function RemoveUrl(arg1) {
   return window['go']['main']['App']['RemoveUrl'](arg1);
 }
 
+export function RestoreWindowState() {
+  return window['go']['main']['App']['RestoreWindowState']();
+}
+
 export function SaveWindowState() {
   return window['go']['main']['App']['SaveWindowState']();
+}
+
+export function StartAppUpdate() {
+  return window['go']['main']['App']['StartAppUpdate']();
 }
 
 export function StartRecording(arg1) {

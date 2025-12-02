@@ -40,8 +40,8 @@ func (d *DouyinSpider) SetCookies(cookies string) {
 }
 
 func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
-	// Extract web_rid
-	// url format: https://live.douyin.com/123456
+	// 提取 web_rid
+	// url 格式: https://live.douyin.com/123456
 	parts := strings.Split(targetUrl, "live.douyin.com/")
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid douyin url")
@@ -50,13 +50,13 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 
 	// Headers
 	userAgent := "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36 Core/1.116.567.400 QQBrowser/19.7.6764.400"
-	// Use configured cookies if available, otherwise default
+	// 如果可用，使用配置的 cookie，否则使用默认值
 	cookie := d.Cookies
 	if cookie == "" {
 		cookie = "ttwid=1%7C2iDIYVmjzMcpZ20fcaFde0VghXAA3NaNXE_SLR68IyE%7C1761045455%7Cab35197d5cfb21df6cbb2fa7ef1c9262206b062c315b9d04da746d0b37dfbc7d"
 	}
 
-	// Params
+	// 参数
 	params := url.Values{}
 	params.Set("aid", "6383")
 	params.Set("app_name", "douyin_web")
@@ -70,12 +70,12 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 	params.Set("web_rid", webRid)
 	params.Set("msToken", "")
 
-	// Generate Signature
+	// 生成签名
 	query := params.Encode()
 	aBogus := crypto.GenerateSignature(query, userAgent)
 	apiUrl := fmt.Sprintf("https://live.douyin.com/webcast/room/web/enter/?%s&a_bogus=%s", query, aBogus)
 
-	// Request
+	// 请求
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
 		return nil, err
@@ -95,13 +95,13 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, err
 	}
 
-	// Parse JSON
+	// 解析 JSON
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, err
 	}
 
-	// Navigate JSON to find stream URL
+	// 导航 JSON 以查找流 URL
 	// data -> data[0] -> stream_url -> flv_pull_url -> FULL_HD1
 	data, ok := result["data"].(map[string]interface{})
 	if !ok {
@@ -119,7 +119,7 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("room is not live (status: %v)", status)
 	}
 
-	// Extract Metadata
+	// 提取元数据
 	title := ""
 	if t, ok := roomData["title"].(string); ok {
 		title = t
@@ -137,10 +137,10 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("stream_url not found")
 	}
 
-	// Try to get FLV pull url
+	// 尝试获取 FLV 拉流 url
 	flvPullUrl, ok := streamUrlObj["flv_pull_url"].(map[string]interface{})
 	if ok {
-		// Just pick the first one for now, or "FULL_HD1"
+		// 暂时只取第一个，或 "FULL_HD1"
 		for _, v := range flvPullUrl {
 			return &StreamInfo{
 				Url:        v.(string),
@@ -150,7 +150,7 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		}
 	}
 
-	// Fallback to HLS
+	// 回退到 HLS
 	hlsPullUrlMap, ok := streamUrlObj["hls_pull_url_map"].(map[string]interface{})
 	if ok {
 		for _, v := range hlsPullUrlMap {
@@ -165,7 +165,7 @@ func (d *DouyinSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 	return nil, fmt.Errorf("no stream url found")
 }
 
-// Helper to extract regex
+// 提取正则表达式的辅助函数
 func extractRegex(content, pattern string) string {
 	re := regexp.MustCompile(pattern)
 	matches := re.FindStringSubmatch(content)

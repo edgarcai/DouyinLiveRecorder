@@ -28,7 +28,7 @@ func (s *WeiboSpider) SetCookies(cookies string) {
 func (s *WeiboSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 	var roomId string
 
-	// 1. Extract Room ID
+	// 1. 提取房间 ID
 	if strings.Contains(targetUrl, "show/") {
 		// https://weibo.com/l/wblive/p/show/1022:2321324990000000000000
 		parts := strings.Split(strings.Split(targetUrl, "?")[0], "show/")
@@ -40,7 +40,7 @@ func (s *WeiboSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		parts := strings.Split(strings.Split(targetUrl, "?")[0], "/u/")
 		if len(parts) > 1 {
 			uid := parts[1]
-			// Call mymblog API to find live status
+			// 调用 mymblog API 查找直播状态
 			apiUrl := fmt.Sprintf("https://weibo.com/ajax/statuses/mymblog?uid=%s&page=1&feature=0", uid)
 			client := &http.Client{}
 			req, err := http.NewRequest("GET", apiUrl, nil)
@@ -53,7 +53,7 @@ func (s *WeiboSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 			if s.Cookies != "" {
 				req.Header.Set("Cookie", s.Cookies)
 			} else {
-				// Default cookie from Python script
+				// 来自 Python 脚本的默认 cookie
 				req.Header.Set("Cookie", "XSRF-TOKEN=qAP-pIY5V4tO6blNOhA4IIOD; SUB=_2AkMRNMCwf8NxqwFRmfwWymPrbI9-zgzEieKnaDFrJRMxHRl-yT9kqmkhtRB6OrTuX5z9N_7qk9C3xxEmNR-8WLcyo2PM;")
 			}
 
@@ -96,7 +96,7 @@ func (s *WeiboSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("failed to extract room id")
 	}
 
-	// 2. Call Live API
+	// 2. 调用直播 API
 	apiUrl := fmt.Sprintf("https://weibo.com/l/pc/anchor/live?live_id=%s", roomId)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", apiUrl, nil)
@@ -126,7 +126,7 @@ func (s *WeiboSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
 		return nil, err
 	}
 
-	// 3. Extract Stream URL
+	// 3. 提取流 URL
 	if data, ok := jsonResult["data"].(map[string]interface{}); ok {
 		if item, ok := data["item"].(map[string]interface{}); ok {
 			if status, ok := item["status"].(float64); ok && status == 1 {

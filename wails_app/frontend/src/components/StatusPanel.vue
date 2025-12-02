@@ -17,7 +17,7 @@ const updateStatus = () => {
   GetUrls().then(urls => {
     state.urls = urls || []
     GetRecordingStatus().then(result => {
-      // Convert array to map for easy lookup
+      // 将数组转换为映射以便于查找
       const map = {}
       if (result) {
         result.forEach(item => {
@@ -35,7 +35,7 @@ const start = () => {
     state.message = result
     state.url = ''
     updateStatus()
-    // Auto clear message after 3 seconds
+    // 3秒后自动清除消息
     setTimeout(() => {
       state.message = ''
     }, 3000)
@@ -100,7 +100,7 @@ const formatTime = (timeStr) => {
 const deleteHistory = (url) => {
   RemoveHistoryItem(url).then(result => {
     if (result === "Removed") {
-      // Refresh history
+      // 刷新历史记录
       showHistoryModal()
     }
   })

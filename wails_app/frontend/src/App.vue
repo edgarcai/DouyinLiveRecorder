@@ -1,50 +1,89 @@
 <script setup>
-import {ref, watch} from 'vue'
+import {ref, watch, onMounted} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {WindowSetTitle, EventsOn} from './wailsjs/runtime/runtime.js'
-import {ToggleMiniMode} from './wailsjs/go/main/App.js'
+import {WindowSetTitle, EventsOn, WindowSetSize, WindowCenter} from './wailsjs/runtime/runtime.js'
+import {ToggleMiniMode, Logout, GetUserInfo, RestoreWindowState} from './wailsjs/go/main/App.js'
 import ConfigPanel from './components/ConfigPanel.vue'
 import StatusPanel from './components/StatusPanel.vue'
 import LogPanel from './components/LogPanel.vue'
 import HelpPanel from './components/HelpPanel.vue'
 import TitleBar from './components/TitleBar.vue'
 import FloatingBall from './components/FloatingBall.vue'
+import LoginModal from './components/LoginModal.vue'
+import Splash from './components/Splash.vue'
 
 const { t, locale } = useI18n()
 const currentTab = ref('status')
 const isMiniMode = ref(false)
 const recordingCount = ref(0)
+const showLoginModal = ref(false)
+const showSplash = ref(true)
+const user = ref(null)
 
-// Update window title when locale changes
+// 当语言环境更改时更新窗口标题
 watch(locale, () => {
   WindowSetTitle(t('app.title'))
 })
 
-// Set initial title
+// 设置初始标题
 WindowSetTitle(t('app.title'))
+
+onMounted(async () => {
+  // 检查登录状态
+  try {
+    const info = await GetUserInfo()
+    if (info && info.isLoggedIn) {
+      user.value = info.user
+    }
+  } catch (e) {
+    console.error('Failed to get user info:', e)
+  }
+})
 
 const toggleMiniMode = async (mini) => {
   await ToggleMiniMode(mini)
   isMiniMode.value = mini
 }
 
-// Listen for mini mode toggle from StatusPanel
+// 监听来自 StatusPanel 的迷你模式切换
 const handleMiniModeToggle = () => {
   toggleMiniMode(true)
 }
 
-// Listen for recording status updates to show badge on ball
-// We can reuse the existing event or poll, but for now let's assume StatusPanel emits or we listen to backend
-// For simplicity, let's just listen to a global event or pass props if we had a store.
-// Since we don't have a store, we'll rely on StatusPanel to update us or just mock it for now.
-// Better: Listen to "recording_status_change" event from backend if available, or just use a timer here too?
-// Let's add a simple listener for now if we can.
+const handleLoginSuccess = (result) => {
+  user.value = {
+    username: result.username,
+    token: result.token
+  }
+}
+
+const handleLogout = async () => {
+  await Logout()
+  user.value = null
+}
+
+// 监听录制状态更新以在球上显示徽章
+// 我们可以重用现有事件或轮询，但现在让我们假设 StatusPanel 发出或我们监听后端
+// 为了简单起见，让我们只监听全局事件或传递 props（如果我们有 store）。
+// 由于我们没有 store，我们将依赖 StatusPanel 更新我们或暂时模拟它。
+// 更好：如果可用，监听来自后端的 "recording_status_change" 事件，或者在这里也使用计时器？
+// 暂时添加一个简单的监听器。
+const handleSplashReady = async () => {
+  showSplash.value = false
+  // 通过后端恢复窗口状态
+  await RestoreWindowState()
+}
 </script>
 
 <template>
-  <div id="app" :class="{mini: isMiniMode}">
+  <Splash v-if="showSplash" @ready="handleSplashReady" />
+  <div v-else id="app" :class="{mini: isMiniMode}">
     <template v-if="!isMiniMode">
-      <TitleBar />
+      <TitleBar 
+        :user="user"
+        @login-click="showLoginModal = true"
+        @logout-click="handleLogout"
+      />
       <div class="app-layout">
         <aside class="sidebar">
           <div class="brand">
@@ -105,6 +144,11 @@ const handleMiniModeToggle = () => {
           </transition>
         </main>
       </div>
+      
+      <LoginModal 
+        v-model:visible="showLoginModal"
+        @login-success="handleLoginSuccess"
+      />
     </template>
     
     <FloatingBall 
@@ -116,7 +160,7 @@ const handleMiniModeToggle = () => {
 </template>
 
 <style>
-/* ... (keep existing root variables) ... */
+/* ... (保留现有的根变量) ... */
 :root {
   --primary-color: #ff2c55;
   --primary-hover: #ff4769;
@@ -136,7 +180,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
-  overflow: hidden; /* Prevent body scroll */
+  overflow: hidden; /* 防止 body 滚动 */
 }
 
 #app {
@@ -145,7 +189,7 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: transparent; /* Allow transparency for floating ball */
+  background: transparent; /* 允许悬浮球透明 */
 }
 
 #app.mini {
@@ -160,7 +204,7 @@ body {
   width: 100%;
 }
 
-/* Sidebar Styles */
+/* 侧边栏样式 */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--sidebar-bg);
@@ -261,7 +305,7 @@ body {
   color: #909399;
 }
 
-/* Main Content Styles */
+/* 主要内容样式 */
 .main-content {
   flex: 1;
   padding: 32px;
@@ -270,7 +314,7 @@ body {
   position: relative;
 }
 
-/* Transitions */
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -282,7 +326,7 @@ body {
   transform: translateY(10px);
 }
 
-/* Global Component Styles */
+/* 全局组件样式 */
 h2 {
   font-size: 24px;
   font-weight: 700;
@@ -343,7 +387,7 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(255, 44, 85, 0.1);
 }
 
-/* Scrollbar Styling */
+/* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

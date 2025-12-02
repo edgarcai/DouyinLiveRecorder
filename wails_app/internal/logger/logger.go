@@ -11,17 +11,17 @@ import (
 	"golang.org/x/net/context"
 )
 
-// LogType defines the type of log
+// LogType 定义日志类型
 type LogType string
 
 const (
-	// LogTypeOperation for user operations
+	// LogTypeOperation 用于用户操作
 	LogTypeOperation LogType = "operation"
-	// LogTypeRunning for system running status
+	// LogTypeRunning 用于系统运行状态
 	LogTypeRunning LogType = "running"
 )
 
-// Logger handles application logging
+// Logger 处理应用程序日志记录
 type Logger struct {
 	ctx           context.Context
 	operationFile *os.File
@@ -33,7 +33,7 @@ type Logger struct {
 var globalLogger *Logger
 var once sync.Once
 
-// Init initializes the global logger
+// Init 初始化全局日志记录器
 func Init(ctx context.Context) error {
 	var err error
 	once.Do(func() {
@@ -49,7 +49,7 @@ func Init(ctx context.Context) error {
 			logDir: logDir,
 		}
 
-		// Open log files
+		// 打开日志文件
 		l.operationFile, err = os.OpenFile(filepath.Join(logDir, "operation.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			return
@@ -65,12 +65,12 @@ func Init(ctx context.Context) error {
 	return err
 }
 
-// GetInstance returns the global logger instance
+// GetInstance 返回全局日志记录器实例
 func GetInstance() *Logger {
 	return globalLogger
 }
 
-// Log logs a message
+// Log 记录一条消息
 func (l *Logger) Log(logType LogType, level string, format string, args ...interface{}) {
 	if l == nil {
 		return
@@ -83,7 +83,7 @@ func (l *Logger) Log(logType LogType, level string, format string, args ...inter
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	logEntry := fmt.Sprintf("[%s] [%s] %s\n", timestamp, level, msg)
 
-	// Write to file
+	// 写入文件
 	var err error
 	if logType == LogTypeOperation {
 		if l.operationFile != nil {
@@ -99,7 +99,7 @@ func (l *Logger) Log(logType LogType, level string, format string, args ...inter
 		fmt.Printf("Error writing to log file: %v\n", err)
 	}
 
-	// Emit to frontend
+	// 发送到前端
 	if l.ctx != nil {
 		runtime.EventsEmit(l.ctx, "log", map[string]string{
 			"type":    string(logType),
@@ -109,25 +109,25 @@ func (l *Logger) Log(logType LogType, level string, format string, args ...inter
 		})
 	}
 
-	// Also print to stdout for debugging
+	// 同时打印到标准输出以进行调试
 	fmt.Print(logEntry)
 }
 
-// Info logs an info message
+// Info 记录一条信息消息
 func Info(logType LogType, format string, args ...interface{}) {
 	if globalLogger != nil {
 		globalLogger.Log(logType, "INFO", format, args...)
 	}
 }
 
-// Error logs an error message
+// Error 记录一条错误消息
 func Error(logType LogType, format string, args ...interface{}) {
 	if globalLogger != nil {
 		globalLogger.Log(logType, "ERROR", format, args...)
 	}
 }
 
-// Warn logs a warning message
+// Warn 记录一条警告消息
 func Warn(logType LogType, format string, args ...interface{}) {
 	if globalLogger != nil {
 		globalLogger.Log(logType, "WARN", format, args...)

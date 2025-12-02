@@ -38,8 +38,8 @@ func (b *BilibiliSpider) SetCookies(cookies string) {
 }
 
 func (b *BilibiliSpider) GetStreamUrl(url string) (*StreamInfo, error) {
-	// Logic ported from get_bilibili_stream_data
-	// 1. Extract Room ID
+	// 逻辑移植自 get_bilibili_stream_data
+	// 1. 提取房间 ID
 	// url: https://live.bilibili.com/123
 	parts := strings.Split(url, "live.bilibili.com/")
 	if len(parts) < 2 {
@@ -47,7 +47,7 @@ func (b *BilibiliSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	}
 	roomId := strings.Split(parts[1], "?")[0]
 
-	// 2. Get Room Info (to get real room id if it's a short id)
+	// 2. 获取房间信息（如果是短 ID，则获取真实房间 ID）
 	infoUrl := fmt.Sprintf("https://api.live.bilibili.com/room/v1/Room/room_init?id=%s", roomId)
 	resp, err := b.Client.Get(infoUrl)
 	if err != nil {
@@ -73,7 +73,7 @@ func (b *BilibiliSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 
 	realRoomId := fmt.Sprintf("%.0f", data["room_id"].(float64))
 
-	// 3. Get Play Url
+	// 3. 获取播放链接
 	// https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo
 	playUrlApi := fmt.Sprintf("https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=%s&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=web&ptype=16", realRoomId)
 
@@ -111,7 +111,7 @@ func (b *BilibiliSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 		return nil, fmt.Errorf("stream not found or empty")
 	}
 
-	// Get first stream, first format, first codec
+	// 获取第一个流，第一个格式，第一个编解码器
 	stream0 := stream[0].(map[string]interface{})
 	format, _ := stream0["format"].([]interface{})
 	format0 := format[0].(map[string]interface{})
@@ -124,7 +124,7 @@ func (b *BilibiliSpider) GetStreamUrl(url string) (*StreamInfo, error) {
 	host := urlInfo0["host"].(string)
 	extra := urlInfo0["extra"].(string)
 
-	// Final URL
+	// 最终 URL
 	finalUrl := host + baseUrl + extra
 	return &StreamInfo{Url: finalUrl}, nil
 }

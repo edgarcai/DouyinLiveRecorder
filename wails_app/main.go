@@ -13,14 +13,14 @@ import (
 var assets embed.FS
 
 func main() {
-	// Create an instance of the app structure
+	// 创建应用程序结构体的实例
 	app := NewApp()
 
-	// Create application with options
+	// 使用选项创建应用程序
 	err := wails.Run(&options.App{
 		Title:  "DouyinLiveRecorder",
-		Width:  1200,
-		Height: 800,
+		Width:  500,
+		Height: 300,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

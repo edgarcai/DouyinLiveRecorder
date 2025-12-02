@@ -7,6 +7,8 @@ export function AddUrl(arg1:string):Promise<string>;
 
 export function CancelFFmpegDownload():Promise<void>;
 
+export function CheckAppUpdate():Promise<Record<string, any>>;
+
 export function CheckFFmpeg():Promise<boolean>;
 
 export function DownloadFFmpeg():Promise<string>;
@@ -23,13 +25,23 @@ export function GetRecordingStatus():Promise<Array<recorder.ActiveRecording>>;
 
 export function GetUrls():Promise<Array<string>>;
 
+export function GetUserInfo():Promise<Record<string, any>>;
+
 export function Greet(arg1:string):Promise<string>;
+
+export function Login(arg1:string,arg2:string):Promise<Record<string, any>>;
+
+export function Logout():Promise<boolean>;
 
 export function RemoveHistoryItem(arg1:string):Promise<string>;
 
 export function RemoveUrl(arg1:string):Promise<string>;
 
+export function RestoreWindowState():Promise<void>;
+
 export function SaveWindowState():Promise<void>;
+
+export function StartAppUpdate():Promise<void>;
 
 export function StartRecording(arg1:string):Promise<string>;
 

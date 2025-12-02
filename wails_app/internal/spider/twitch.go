@@ -37,7 +37,7 @@ func (t *TwitchSpider) SetCookies(cookies string) {
 }
 
 func (t *TwitchSpider) GetStreamUrl(targetUrl string) (*StreamInfo, error) {
-	// Use yt-dlp for Twitch as well, it's reliable
+	// 对于 Twitch 也使用 yt-dlp，它很可靠
 	_, err := exec.LookPath("yt-dlp")
 	if err != nil {
 		return nil, fmt.Errorf("yt-dlp not found, please install it to record Twitch")

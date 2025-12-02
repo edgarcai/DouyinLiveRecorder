@@ -10,11 +10,12 @@ import (
 	"wails_app/internal/ffmpeg"
 	"wails_app/internal/logger"
 	"wails_app/internal/recorder"
+	"wails_app/internal/updater"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// App struct
+// App 应用程序结构体
 type App struct {
 	ctx             context.Context
 	Config          *config.Configuration
@@ -22,35 +23,36 @@ type App struct {
 	UrlManager      *config.URLManager
 	HistoryManager  *config.HistoryManager
 	FFmpegManager   *ffmpeg.Manager
+	UpdaterManager  *updater.Manager
 }
 
-// NewApp creates a new App application struct
+// NewApp 创建一个新的 App 应用程序结构体
 func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
+// startup 在应用程序启动时调用。保存上下文
+// 以便我们可以调用运行时方法
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	// Initialize Logger
+	// 初始化日志
 	logger.Init(ctx)
 	logger.Info(logger.LogTypeOperation, "App started")
 
-	// Load config
+	// 加载配置
 	cfgPath := config.GetDefaultConfigPath()
 	if cfgPath != "" {
 		cfg, err := config.LoadConfig(cfgPath)
 		if err == nil {
 			a.Config = cfg
 			fmt.Printf("Loaded config from %s\n", cfgPath)
-			// Backup config
+			// 备份配置
 			if err := config.BackupConfig(cfgPath); err != nil {
 				fmt.Printf("Error backing up config: %v\n", err)
 			}
 		} else {
 			fmt.Printf("Error loading config: %v\n", err)
-			// Initialize empty config or handle error
+			// 初始化空配置或处理错误
 			a.Config = &config.Configuration{}
 		}
 	} else {
@@ -58,52 +60,68 @@ func (a *App) startup(ctx context.Context) {
 		a.Config = &config.Configuration{}
 	}
 
-	// Initialize URL Manager
-	// Assuming config dir is same as config file
+	// 初始化 URL 管理器
+	// 假设配置目录与配置文件相同
 	urlConfigPath := "config/URL_config.ini" // Default relative
-	// TODO: Use absolute path based on executable location or config location
-	// TODO: Use absolute path based on executable location or config location
+	// TODO: 根据可执行文件位置或配置位置使用绝对路径
 	a.UrlManager = config.NewURLManager(urlConfigPath)
 
-	// Initialize History Manager
+	// 初始化历史记录管理器
 	historyPath := "config/history.json"
 	a.HistoryManager = config.NewHistoryManager(historyPath)
 
-	// Initialize Recorder Manager
+	// 初始化录制管理器
 	a.RecorderManager = recorder.NewManager(a.ctx, a.Config, a.HistoryManager)
 
-	// Initialize FFmpeg Manager
+	// 初始化 FFmpeg 管理器
 	a.FFmpegManager = ffmpeg.NewManager(a.ctx)
 
-	// Auto-start persisted URLs
+	// 初始化更新管理器
+	a.UpdaterManager = updater.NewManager(a.ctx)
+
+	// 自动开始已持久化的 URL
 	for _, url := range a.UrlManager.GetURLs() {
 		go a.RecorderManager.StartRecording(url)
 	}
 
-	// Restore window state
+	// 自动开始已持久化的 URL
+	for _, url := range a.UrlManager.GetURLs() {
+		go a.RecorderManager.StartRecording(url)
+	}
+
+	// 窗口状态恢复现在由前端在启动页后处理
+}
+
+// RestoreWindowState 恢复保存的窗口大小和位置
+func (a *App) RestoreWindowState() {
 	if a.Config.WindowSettings.Width > 0 && a.Config.WindowSettings.Height > 0 {
 		runtime.WindowSetSize(a.ctx, a.Config.WindowSettings.Width, a.Config.WindowSettings.Height)
+	} else {
+		runtime.WindowSetSize(a.ctx, 1200, 800)
 	}
+
 	if a.Config.WindowSettings.X != 0 || a.Config.WindowSettings.Y != 0 {
 		runtime.WindowSetPosition(a.ctx, a.Config.WindowSettings.X, a.Config.WindowSettings.Y)
+	} else {
+		runtime.WindowCenter(a.ctx)
 	}
 }
 
-// Greet returns a greeting for the given name
+// Greet 返回给定名称的问候语
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
-// GetConfig returns the current configuration
+// GetConfig 返回当前配置
 func (a *App) GetConfig() *config.Configuration {
 	return a.Config
 }
 
-// UpdateConfig updates the application configuration
+// UpdateConfig 更新应用程序配置
 func (a *App) UpdateConfig(cfg *config.Configuration) string {
 	a.Config = cfg
 
-	// Save to file
+	// 保存到文件
 	configPath := config.GetDefaultConfigPath()
 	if configPath == "" {
 		cwd, _ := os.Getwd()
@@ -115,38 +133,38 @@ func (a *App) UpdateConfig(cfg *config.Configuration) string {
 		return "Error saving config: " + err.Error()
 	}
 
-	// Update manager
+	// 更新管理器
 	a.RecorderManager.UpdateConfig(cfg)
 
 	logger.Info(logger.LogTypeOperation, "Configuration updated")
 	return "Saved"
 }
 
-// ToggleMiniMode switches between mini (floating ball) and normal mode
+// ToggleMiniMode 在迷你（悬浮球）和正常模式之间切换
 func (a *App) ToggleMiniMode(mini bool) {
 	if mini {
-		// Switch to mini mode
+		// 切换到迷你模式
 		logger.Info(logger.LogTypeOperation, "Switched to mini mode")
 		runtime.WindowSetSize(a.ctx, 60, 60)
 		runtime.WindowSetAlwaysOnTop(a.ctx, true)
 
-		// Restore position if saved
+		// 如果已保存，恢复位置
 		if a.Config.WindowSettings.MiniPosX != 0 || a.Config.WindowSettings.MiniPosY != 0 {
 			runtime.WindowSetPosition(a.ctx, a.Config.WindowSettings.MiniPosX, a.Config.WindowSettings.MiniPosY)
 		}
 	} else {
-		// Save current position (mini mode position)
+		// 保存当前位置（迷你模式位置）
 		x, y := runtime.WindowGetPosition(a.ctx)
 		a.Config.WindowSettings.MiniPosX = x
 		a.Config.WindowSettings.MiniPosY = y
 
-		// Save config to persist position
+		// 保存配置以持久化位置
 		a.UpdateConfig(a.Config)
 
-		// Switch to normal mode
+		// 切换到正常模式
 		logger.Info(logger.LogTypeOperation, "Switched to normal mode")
 
-		// Restore normal window size and position if saved
+		// 如果已保存，恢复正常窗口大小和位置
 		width := a.Config.WindowSettings.Width
 		height := a.Config.WindowSettings.Height
 		if width == 0 || height == 0 {
@@ -165,15 +183,15 @@ func (a *App) ToggleMiniMode(mini bool) {
 	}
 }
 
-// SaveWindowState saves the current window state
+// SaveWindowState 保存当前窗口状态
 func (a *App) SaveWindowState() {
 	if a.ctx == nil {
 		return
 	}
 
-	// Don't save if in mini mode
-	// We can check window size to guess mode, or track state
-	// For now, let's assume if size is small it's mini mode
+	// 如果在迷你模式下不保存
+	// 我们可以检查窗口大小来猜测模式，或跟踪状态
+	// 目前，假设如果尺寸很小则是迷你模式
 	w, h := runtime.WindowGetSize(a.ctx)
 	if w < 200 && h < 200 {
 		return
@@ -188,7 +206,7 @@ func (a *App) SaveWindowState() {
 	a.UpdateConfig(a.Config)
 }
 
-// StartRecording starts recording a URL
+// StartRecording 开始录制 URL
 func (a *App) StartRecording(url string) string {
 	err := a.RecorderManager.StartRecording(url)
 	if err != nil {
@@ -197,7 +215,7 @@ func (a *App) StartRecording(url string) string {
 	return "Started"
 }
 
-// StopRecording stops recording a URL
+// StopRecording 停止录制 URL
 func (a *App) StopRecording(url string) string {
 	err := a.RecorderManager.StopRecording(url)
 	if err != nil {
@@ -206,49 +224,49 @@ func (a *App) StopRecording(url string) string {
 	return "Stopped"
 }
 
-// GetRecordingStatus returns the status of all active recordings
+// GetRecordingStatus 返回所有活动录制的状态
 func (a *App) GetRecordingStatus() []recorder.ActiveRecording {
 	return a.RecorderManager.GetActiveRecordings()
 }
 
-// AddUrl adds a URL to the persistent list and starts recording
+// AddUrl 将 URL 添加到持久列表并开始录制
 func (a *App) AddUrl(url string) string {
-	// Update history (initial add, no metadata yet)
+	// 更新历史记录（初始添加，尚无元数据）
 	a.HistoryManager.AddOrUpdate(url, "", "", "")
 
 	err := a.UrlManager.AddURL(url)
 	if err != nil {
 		return err.Error()
 	}
-	// Also start recording
+	// 同时开始录制
 	go a.RecorderManager.StartRecording(url)
 	logger.Info(logger.LogTypeOperation, "Added URL: %s", url)
 	return "Added"
 }
 
-// RemoveUrl removes a URL from the persistent list and stops recording
+// RemoveUrl 从持久列表中删除 URL 并停止录制
 func (a *App) RemoveUrl(url string) string {
 	err := a.UrlManager.RemoveURL(url)
 	if err != nil {
 		return err.Error()
 	}
-	// Also stop recording
+	// 同时停止录制
 	a.RecorderManager.StopRecording(url)
 	logger.Info(logger.LogTypeOperation, "Removed URL: %s", url)
 	return "Removed"
 }
 
-// GetUrls returns the persistent list of URLs
+// GetUrls 返回 URL 的持久列表
 func (a *App) GetUrls() []string {
 	return a.UrlManager.GetURLs()
 }
 
-// GetHistory returns the recording history
+// GetHistory 返回录制历史记录
 func (a *App) GetHistory() []config.HistoryItem {
 	return a.HistoryManager.GetHistory()
 }
 
-// RemoveHistoryItem removes a history item
+// RemoveHistoryItem 删除历史记录项
 func (a *App) RemoveHistoryItem(url string) string {
 	err := a.HistoryManager.Remove(url)
 	if err != nil {
@@ -257,12 +275,12 @@ func (a *App) RemoveHistoryItem(url string) string {
 	return "Removed"
 }
 
-// CheckFFmpeg checks if ffmpeg is installed
+// CheckFFmpeg 检查 ffmpeg 是否已安装
 func (a *App) CheckFFmpeg() bool {
 	return a.FFmpegManager.CheckFFmpeg()
 }
 
-// DownloadFFmpeg starts downloading ffmpeg
+// DownloadFFmpeg 开始下载 ffmpeg
 func (a *App) DownloadFFmpeg() string {
 	err := a.FFmpegManager.DownloadFFmpeg()
 	if err != nil {
@@ -271,7 +289,7 @@ func (a *App) DownloadFFmpeg() string {
 	return "Started"
 }
 
-// GetFFmpegDownloadProgress returns the current download progress
+// GetFFmpegDownloadProgress 返回当前下载进度
 func (a *App) GetFFmpegDownloadProgress() map[string]interface{} {
 	progress, status := a.FFmpegManager.GetDownloadProgress()
 	return map[string]interface{}{
@@ -280,12 +298,69 @@ func (a *App) GetFFmpegDownloadProgress() map[string]interface{} {
 	}
 }
 
-// CancelFFmpegDownload cancels the download
+// CancelFFmpegDownload 取消下载
 func (a *App) CancelFFmpegDownload() {
 	a.FFmpegManager.CancelDownload()
 }
 
-// GetFFmpegInfo returns the version info of ffmpeg
+// GetFFmpegInfo 返回 ffmpeg 的版本信息
 func (a *App) GetFFmpegInfo() string {
 	return a.FFmpegManager.GetFFmpegInfo()
+}
+
+// Login 处理用户登录
+func (a *App) Login(username, password string) map[string]interface{} {
+	// 模拟登录逻辑
+	if username != "" && password != "" {
+		logger.Info(logger.LogTypeOperation, "User logged in: %s", username)
+		return map[string]interface{}{
+			"success":  true,
+			"username": username,
+			"token":    "mock_token_" + username,
+		}
+	}
+	return map[string]interface{}{
+		"success": false,
+		"message": "Invalid credentials",
+	}
+}
+
+// Logout 处理用户登出
+func (a *App) Logout() bool {
+	logger.Info(logger.LogTypeOperation, "User logged out")
+	return true
+}
+
+// GetUserInfo 返回当前用户信息（模拟）
+func (a *App) GetUserInfo() map[string]interface{} {
+	// 在实际应用中，检查会话/令牌
+	return map[string]interface{}{
+		"isLoggedIn": false,
+	}
+}
+
+// CheckAppUpdate 检查应用程序更新
+func (a *App) CheckAppUpdate() map[string]interface{} {
+	hasUpdate, newVersion, notes, err := a.UpdaterManager.CheckUpdate()
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+	return map[string]interface{}{
+		"hasUpdate":    hasUpdate,
+		"newVersion":   newVersion,
+		"releaseNotes": notes,
+	}
+}
+
+// StartAppUpdate 开始更新下载过程
+func (a *App) StartAppUpdate() {
+	go func() {
+		progressChan := a.UpdaterManager.DownloadUpdate()
+		for progress := range progressChan {
+			runtime.EventsEmit(a.ctx, "update-progress", progress)
+		}
+		runtime.EventsEmit(a.ctx, "update-complete", true)
+	}()
 }

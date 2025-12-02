@@ -5,7 +5,7 @@ import {EventsOn} from '../wailsjs/runtime/runtime.js'
 
 const { t } = useI18n()
 const logs = ref([])
-const activeTab = ref('running') // 'running' or 'operation'
+const activeTab = ref('running') // 'running' (运行日志) 或 'operation' (操作日志)
 const logContainer = ref(null)
 
 const filteredLogs = computed(() => {
@@ -22,12 +22,12 @@ const addLog = (msg) => {
     id: Date.now() + Math.random()
   })
   
-  // Keep last 1000 logs
+  // 保留最后 1000 条日志
   if (logs.value.length > 1000) {
     logs.value.shift()
   }
   
-  // Auto scroll
+  // 自动滚动
   setTimeout(() => {
     if (logContainer.value) {
       logContainer.value.scrollTop = logContainer.value.scrollHeight
