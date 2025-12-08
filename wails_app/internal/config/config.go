@@ -14,6 +14,12 @@ type Configuration struct {
 	Authorization     Authorization     `ini:"Authorization"`
 	Accounts          Accounts          `ini:"账号密码"`
 	WindowSettings    WindowSettings    `ini:"窗口设置"`
+	UpdateSettings    UpdateSettings    `ini:"更新设置"`
+}
+
+type UpdateSettings struct {
+	CheckUpdateOnStart string `ini:"启动时检查更新(是/否)"`
+	UpdateUrl          string `ini:"更新检查地址"`
 }
 
 type WindowSettings struct {

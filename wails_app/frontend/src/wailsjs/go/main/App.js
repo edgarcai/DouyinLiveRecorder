@@ -78,8 +78,8 @@ export function SaveWindowState() {
   return window['go']['main']['App']['SaveWindowState']();
 }
 
-export function StartAppUpdate() {
-  return window['go']['main']['App']['StartAppUpdate']();
+export function StartAppUpdate(arg1) {
+  return window['go']['main']['App']['StartAppUpdate'](arg1);
 }
 
 export function StartRecording(arg1) {

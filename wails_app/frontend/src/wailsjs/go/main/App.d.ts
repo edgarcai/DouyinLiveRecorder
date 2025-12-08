@@ -41,7 +41,7 @@ export function RestoreWindowState():Promise<void>;
 
 export function SaveWindowState():Promise<void>;
 
-export function StartAppUpdate():Promise<void>;
+export function StartAppUpdate(arg1:string):Promise<void>;
 
 export function StartRecording(arg1:string):Promise<string>;
 

@@ -42,6 +42,20 @@ export namespace config {
 	        this.PopkontvToken = source["PopkontvToken"];
 	    }
 	}
+	export class UpdateSettings {
+	    CheckUpdateOnStart: string;
+	    UpdateUrl: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.CheckUpdateOnStart = source["CheckUpdateOnStart"];
+	        this.UpdateUrl = source["UpdateUrl"];
+	    }
+	}
 	export class WindowSettings {
 	    MiniPosX: number;
 	    MiniPosY: number;
@@ -319,6 +333,7 @@ export namespace config {
 	    Authorization: Authorization;
 	    Accounts: Accounts;
 	    WindowSettings: WindowSettings;
+	    UpdateSettings: UpdateSettings;
 	
 	    static createFrom(source: any = {}) {
 	        return new Configuration(source);
@@ -332,6 +347,7 @@ export namespace config {
 	        this.Authorization = this.convertValues(source["Authorization"], Authorization);
 	        this.Accounts = this.convertValues(source["Accounts"], Accounts);
 	        this.WindowSettings = this.convertValues(source["WindowSettings"], WindowSettings);
+	        this.UpdateSettings = this.convertValues(source["UpdateSettings"], UpdateSettings);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -392,6 +408,7 @@ export namespace config {
 		    return a;
 		}
 	}
+	
 	
 	
 

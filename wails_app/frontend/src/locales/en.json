@@ -53,7 +53,14 @@
             },
             "cookies": "Cookies",
             "push": "Push",
-            "accounts": "Accounts"
+            "accounts": "Accounts",
+            "update": "Update"
+        },
+        "update": {
+            "title": "Update Settings",
+            "check_on_start": "Check on Start",
+            "url": "Update URL",
+            "check_now": "Check for Updates"
         },
         "subtitle": {
             "general": "Configure basic recording parameters",
@@ -89,7 +96,8 @@
             "save_path": "Default: ./downloads",
             "cookie": "Paste cookie here...",
             "channels": "dingtalk,wechat,bark",
-            "proxy": "http://127.0.0.1:7890"
+            "proxy": "http://127.0.0.1:7890",
+            "update_url": "https://example.com/version.json"
         },
         "hint": {
             "channels": "Separate multiple channels with commas"
@@ -140,5 +148,17 @@
             "q2": "Where are the files saved?",
             "a2": "By default, they are saved in the 'downloads' folder. You can change this in the Config page."
         }
+    },
+    "update": {
+        "title": "Software Update",
+        "checking": "Checking for updates...",
+        "retry": "Retry",
+        "release_notes": "Release Notes",
+        "download": "Download Update",
+        "later": "Later",
+        "downloaded": "Update Downloaded",
+        "install_instruction": "The update has been downloaded. Please install it manually.",
+        "close": "Close",
+        "latest_version": "You are using the latest version."
     }
 }

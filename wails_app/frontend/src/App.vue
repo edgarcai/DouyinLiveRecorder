@@ -11,6 +11,7 @@ import TitleBar from './components/TitleBar.vue'
 import FloatingBall from './components/FloatingBall.vue'
 import LoginModal from './components/LoginModal.vue'
 import Splash from './components/Splash.vue'
+import UpdateModal from './components/UpdateModal.vue'
 
 const { t, locale } = useI18n()
 const currentTab = ref('status')
@@ -19,6 +20,7 @@ const recordingCount = ref(0)
 const showLoginModal = ref(false)
 const showSplash = ref(true)
 const user = ref(null)
+const showUpdateModal = ref(false)
 
 // 当语言环境更改时更新窗口标题
 watch(locale, () => {
@@ -38,6 +40,16 @@ onMounted(async () => {
   } catch (e) {
     console.error('Failed to get user info:', e)
   }
+
+  // Listen for manual check
+  window.addEventListener('check-update', () => {
+    showUpdateModal.value = true
+  })
+
+  // Listen for auto-check result from backend
+  EventsOn("update-available", () => {
+    showUpdateModal.value = true
+  })
 })
 
 const toggleMiniMode = async (mini) => {
@@ -148,6 +160,10 @@ const handleSplashReady = async () => {
       <LoginModal 
         v-model:visible="showLoginModal"
         @login-success="handleLoginSuccess"
+      />
+      <UpdateModal 
+        :show="showUpdateModal" 
+        @close="showUpdateModal = false"
       />
     </template>
     

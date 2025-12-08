@@ -1,7 +1,7 @@
 <script setup>
 import {reactive, onMounted, ref, watch} from 'vue'
 import {useI18n} from 'vue-i18n'
-import {GetConfig, UpdateConfig, CheckFFmpeg, DownloadFFmpeg, GetFFmpegDownloadProgress, CancelFFmpegDownload, GetFFmpegInfo} from '../wailsjs/go/main/App.js'
+import {GetConfig, UpdateConfig, CheckFFmpeg, DownloadFFmpeg, GetFFmpegDownloadProgress, CancelFFmpegDownload, GetFFmpegInfo, CheckAppUpdate, StartAppUpdate} from '../wailsjs/go/main/App.js'
 
 const { t } = useI18n()
 
@@ -10,7 +10,8 @@ const config = reactive({
   PushSettings: {},
   Cookies: {},
   Authorization: {},
-  Accounts: {}
+  Accounts: {},
+  UpdateSettings: {}
 })
 
 const loading = reactive({value: true})
@@ -108,6 +109,14 @@ const startProgressPolling = () => {
 
 const cancelDownload = () => {
     CancelFFmpegDownload()
+}
+
+const checkUpdate = () => {
+  // Emit event to parent or handle it here. 
+  // For now, let's emit an event so the main App.vue can handle the modal.
+  // Or we can use a simple alert for testing, but the plan said "UpdateModal".
+  // Let's dispatch a custom event.
+  window.dispatchEvent(new CustomEvent('check-update'))
 }
 </script>
 
@@ -300,6 +309,28 @@ const cancelDownload = () => {
 
         <!-- 系统工具 -->
         <div v-else-if="activeTab === 'system_tools'" class="card settings-card">
+          <div class="card-header">
+            <h3>{{ $t('config.update.title') }}</h3>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>{{ $t('config.update.check_on_start') }}</label>
+              <select v-model="config.UpdateSettings.CheckUpdateOnStart">
+                <option value="是">{{ $t('config.options.yes') }}</option>
+                <option value="否">{{ $t('config.options.no') }}</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label>{{ $t('config.update.url') }}</label>
+              <input v-model="config.UpdateSettings.UpdateUrl" :placeholder="$t('config.placeholder.update_url')" />
+            </div>
+            <div class="form-group">
+                <button @click="checkUpdate" class="action-btn">{{ $t('config.update.check_now') }}</button>
+            </div>
+          </div>
+          
+          <div class="separator" style="margin: 32px 0; border-top: 1px solid var(--border-color);"></div>
+
           <div class="card-header">
             <h3>{{ $t('config.ffmpeg.title') }}</h3>
           </div>

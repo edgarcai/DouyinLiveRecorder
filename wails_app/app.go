@@ -77,7 +77,21 @@ func (a *App) startup(ctx context.Context) {
 	a.FFmpegManager = ffmpeg.NewManager(a.ctx)
 
 	// 初始化更新管理器
-	a.UpdaterManager = updater.NewManager(a.ctx)
+	a.UpdaterManager = updater.NewManager(a.ctx, a.Config)
+
+	// 启动时检查更新
+	if a.Config.UpdateSettings.CheckUpdateOnStart == "是" {
+		go func() {
+			// 给一点延迟，让前端先加载完成
+			// 虽然 EventsEmit 会排队，但延迟更安全
+			// 或者在前端 mounted 后发送 'app-ready' 事件再检查
+			// 这里简单起见，直接检查，前端监听 update-available
+			hasUpdate, _, _, _, _ := a.UpdaterManager.CheckUpdate()
+			if hasUpdate {
+				runtime.EventsEmit(a.ctx, "update-available")
+			}
+		}()
+	}
 
 	// 自动开始已持久化的 URL
 	for _, url := range a.UrlManager.GetURLs() {
@@ -341,7 +355,7 @@ func (a *App) GetUserInfo() map[string]interface{} {
 
 // CheckAppUpdate 检查应用程序更新
 func (a *App) CheckAppUpdate() map[string]interface{} {
-	hasUpdate, newVersion, notes, err := a.UpdaterManager.CheckUpdate()
+	hasUpdate, newVersion, notes, downloadUrl, err := a.UpdaterManager.CheckUpdate()
 	if err != nil {
 		return map[string]interface{}{
 			"error": err.Error(),
@@ -351,16 +365,21 @@ func (a *App) CheckAppUpdate() map[string]interface{} {
 		"hasUpdate":    hasUpdate,
 		"newVersion":   newVersion,
 		"releaseNotes": notes,
+		"downloadUrl":  downloadUrl,
 	}
 }
 
 // StartAppUpdate 开始更新下载过程
-func (a *App) StartAppUpdate() {
+func (a *App) StartAppUpdate(downloadUrl string) {
 	go func() {
-		progressChan := a.UpdaterManager.DownloadUpdate()
+		progressChan, filePath, err := a.UpdaterManager.DownloadUpdate(downloadUrl)
+		if err != nil {
+			runtime.EventsEmit(a.ctx, "update-error", err.Error())
+			return
+		}
 		for progress := range progressChan {
 			runtime.EventsEmit(a.ctx, "update-progress", progress)
 		}
-		runtime.EventsEmit(a.ctx, "update-complete", true)
+		runtime.EventsEmit(a.ctx, "update-complete", filePath)
 	}()
 }

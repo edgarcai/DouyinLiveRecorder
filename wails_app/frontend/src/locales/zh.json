@@ -38,7 +38,14 @@
             "system_tools": "系统工具",
             "cookies": "Cookie配置",
             "push": "推送通知",
-            "accounts": "账号管理"
+            "accounts": "账号管理",
+            "update": "更新设置"
+        },
+        "update": {
+            "title": "更新设置",
+            "check_on_start": "启动时检查",
+            "url": "更新检查地址",
+            "check_now": "检查更新"
         },
         "ffmpeg": {
             "title": "FFmpeg 工具",
@@ -89,7 +96,8 @@
             "save_path": "默认: ./downloads",
             "cookie": "在此粘贴 Cookie...",
             "channels": "dingtalk,wechat,bark",
-            "proxy": "http://127.0.0.1:7890"
+            "proxy": "http://127.0.0.1:7890",
+            "update_url": "https://example.com/version.json"
         },
         "hint": {
             "channels": "多个渠道请用逗号分隔"
@@ -154,5 +162,17 @@
             "username": "请输入用户名",
             "password": "请输入密码"
         }
+    },
+    "update": {
+        "title": "软件更新",
+        "checking": "正在检查更新...",
+        "retry": "重试",
+        "release_notes": "更新日志",
+        "download": "下载更新",
+        "later": "稍后",
+        "downloaded": "更新已下载",
+        "install_instruction": "更新包已下载，请手动安装。",
+        "close": "关闭",
+        "latest_version": "当前已是最新版本。"
     }
 }
