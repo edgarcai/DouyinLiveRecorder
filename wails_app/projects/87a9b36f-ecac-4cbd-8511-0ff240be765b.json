@@ -1,0 +1,50 @@
+{
+  "id": "87a9b36f-ecac-4cbd-8511-0ff240be765b",
+  "name": "Untitled Project",
+  "created_time": "2025-12-08T20:06:51.396623+08:00",
+  "updated_time": "2025-12-08T20:06:51.396623+08:00",
+  "timeline": {
+    "video_tracks": [
+      {
+        "id": "v1",
+        "type": "video",
+        "clips": [
+          {
+            "id": "e90d3540-1a59-4cca-8a65-349e19d02f4d",
+            "type": "video",
+            "path": "/Users/caijiaxin/Downloads/live_records/20251203_130937_美洋MEIYANG_上新继续.mp4",
+            "start": 1110,
+            "duration": 10000,
+            "in_point": 0,
+            "out_point": 10000,
+            "property": {
+              "scale": 1,
+              "pos_x": 0,
+              "pos_y": 0,
+              "rotation": 0,
+              "opacity": 1,
+              "volume": 1.9,
+              "font_size": 24,
+              "font_color": "#ffffff"
+            }
+          }
+        ],
+        "muted": false,
+        "hide": false
+      }
+    ],
+    "audio_tracks": [],
+    "text_tracks": [
+      {
+        "id": "t1",
+        "type": "text",
+        "clips": [],
+        "muted": false,
+        "hide": false
+      }
+    ],
+    "effect_tracks": [],
+    "duration": 0
+  },
+  "version": "1.0.0"
+}

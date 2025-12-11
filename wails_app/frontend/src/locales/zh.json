@@ -39,7 +39,17 @@
             "cookies": "Cookie配置",
             "push": "推送通知",
             "accounts": "账号管理",
-            "update": "更新设置"
+            "update": "更新设置",
+            "ai": "AI配置"
+        },
+        "ai": {
+            "title": "AI 设置 (Gemini)",
+            "api_key": "Gemini API Key",
+            "model": "模型名称 (默认: gemini-1.5-flash)",
+            "placeholder": {
+                "api_key": "请输入您的 Google Gemini API Key",
+                "model": "gemini-1.5-flash"
+            }
         },
         "update": {
             "title": "更新设置",

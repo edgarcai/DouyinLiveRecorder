@@ -11,6 +11,7 @@ const config = reactive({
   Cookies: {},
   Authorization: {},
   Accounts: {},
+  AISettings: {},
   UpdateSettings: {}
 })
 
@@ -140,7 +141,7 @@ const checkUpdate = () => {
       <div class="tabs-container">
         <div class="tabs">
           <button 
-            v-for="tab in ['general', 'cookies', 'push', 'accounts', 'system_tools']" 
+            v-for="tab in ['general', 'cookies', 'push', 'accounts', 'ai', 'system_tools']" 
             :key="tab"
             :class="{active: activeTab === tab}" 
             @click="activeTab = tab"
@@ -303,6 +304,30 @@ const checkUpdate = () => {
             <div class="form-group">
               <label>{{ $t('config.accounts.flextv_password') }}</label>
               <input type="password" v-model="config.Accounts.FlextvPassword" />
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 设置 -->
+        <div v-else-if="activeTab === 'ai'" class="card settings-card">
+          <div class="card-header">
+            <h3>{{ $t('ai.title') }}</h3>
+          </div>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>{{ $t('ai.api_key') }}</label>
+              <input 
+                type="password" 
+                v-model="config.AISettings.GeminiApiKey" 
+                :placeholder="$t('ai.placeholder.api_key')" 
+              />
+            </div>
+            <div class="form-group full-width">
+              <label>{{ $t('ai.model') }}</label>
+              <input 
+                v-model="config.AISettings.GeminiModel" 
+                :placeholder="$t('ai.placeholder.model')" 
+              />
             </div>
           </div>
         </div>

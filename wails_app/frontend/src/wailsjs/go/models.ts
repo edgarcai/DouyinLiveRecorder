@@ -1,5 +1,19 @@
 export namespace config {
 	
+	export class AISettings {
+	    GeminiApiKey: string;
+	    GeminiModel: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AISettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.GeminiApiKey = source["GeminiApiKey"];
+	        this.GeminiModel = source["GeminiModel"];
+	    }
+	}
 	export class Accounts {
 	    SoopliveAccount: string;
 	    SooplivePassword: string;
@@ -334,6 +348,7 @@ export namespace config {
 	    Accounts: Accounts;
 	    WindowSettings: WindowSettings;
 	    UpdateSettings: UpdateSettings;
+	    AISettings: AISettings;
 	
 	    static createFrom(source: any = {}) {
 	        return new Configuration(source);
@@ -348,6 +363,7 @@ export namespace config {
 	        this.Accounts = this.convertValues(source["Accounts"], Accounts);
 	        this.WindowSettings = this.convertValues(source["WindowSettings"], WindowSettings);
 	        this.UpdateSettings = this.convertValues(source["UpdateSettings"], UpdateSettings);
+	        this.AISettings = this.convertValues(source["AISettings"], AISettings);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

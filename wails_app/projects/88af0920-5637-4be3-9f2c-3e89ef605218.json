@@ -1,0 +1,14 @@
+{
+  "id": "88af0920-5637-4be3-9f2c-3e89ef605218",
+  "name": "Untitled Project",
+  "created_time": "2025-12-08T19:32:44.738402+08:00",
+  "updated_time": "2025-12-08T19:32:44.738402+08:00",
+  "timeline": {
+    "video_tracks": [],
+    "audio_tracks": [],
+    "text_tracks": [],
+    "effect_tracks": [],
+    "duration": 0
+  },
+  "version": "1.0.0"
+}

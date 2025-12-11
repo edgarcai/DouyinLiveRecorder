@@ -15,6 +15,7 @@ type Configuration struct {
 	Accounts          Accounts          `ini:"账号密码"`
 	WindowSettings    WindowSettings    `ini:"窗口设置"`
 	UpdateSettings    UpdateSettings    `ini:"更新设置"`
+	AISettings        AISettings        `ini:"AI设置"`
 }
 
 type UpdateSettings struct {
@@ -151,6 +152,11 @@ type Cookies struct {
 
 type Authorization struct {
 	PopkontvToken string `ini:"popkontv_token"`
+}
+
+type AISettings struct {
+	GeminiApiKey string `ini:"gemini_api_key"`
+	GeminiModel  string `ini:"gemini_model"`
 }
 
 type Accounts struct {

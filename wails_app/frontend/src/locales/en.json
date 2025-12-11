@@ -54,7 +54,17 @@
             "cookies": "Cookies",
             "push": "Push",
             "accounts": "Accounts",
-            "update": "Update"
+            "update": "Update",
+            "ai": "AI Config"
+        },
+        "ai": {
+            "title": "AI Settings (Gemini)",
+            "api_key": "Gemini API Key",
+            "model": "Model Name (Default: gemini-1.5-flash)",
+            "placeholder": {
+                "api_key": "Enter your Google Gemini API Key",
+                "model": "gemini-1.5-flash"
+            }
         },
         "update": {
             "title": "Update Settings",

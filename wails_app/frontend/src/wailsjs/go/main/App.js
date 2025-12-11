@@ -22,6 +22,10 @@ export function DownloadFFmpeg() {
   return window['go']['main']['App']['DownloadFFmpeg']();
 }
 
+export function GenerateAIContent(arg1, arg2) {
+  return window['go']['main']['App']['GenerateAIContent'](arg1, arg2);
+}
+
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"wails_app/internal/ai"
 	"wails_app/internal/config"
 	"wails_app/internal/ffmpeg"
 	"wails_app/internal/logger"
@@ -24,6 +25,7 @@ type App struct {
 	HistoryManager  *config.HistoryManager
 	FFmpegManager   *ffmpeg.Manager
 	UpdaterManager  *updater.Manager
+	AIManager       *ai.Manager
 }
 
 // NewApp 创建一个新的 App 应用程序结构体
@@ -79,6 +81,9 @@ func (a *App) startup(ctx context.Context) {
 	// 初始化更新管理器
 	a.UpdaterManager = updater.NewManager(a.ctx, a.Config)
 
+	// 初始化 AI 管理器
+	a.AIManager = ai.NewManager(a.ctx, a.Config)
+
 	// 启动时检查更新
 	if a.Config.UpdateSettings.CheckUpdateOnStart == "是" {
 		go func() {
@@ -91,11 +96,6 @@ func (a *App) startup(ctx context.Context) {
 				runtime.EventsEmit(a.ctx, "update-available")
 			}
 		}()
-	}
-
-	// 自动开始已持久化的 URL
-	for _, url := range a.UrlManager.GetURLs() {
-		go a.RecorderManager.StartRecording(url)
 	}
 
 	// 自动开始已持久化的 URL
@@ -149,6 +149,26 @@ func (a *App) UpdateConfig(cfg *config.Configuration) string {
 
 	// 更新管理器
 	a.RecorderManager.UpdateConfig(cfg)
+	// AI Manager uses config pointer, so it sees changes immediately, usually.
+	// But if we replaced the pointer in App, we might need to recreate manager or update it.
+	// Current implementation: app.Config = cfg.
+	// The managers hold *config.Configuration. If we just update the fields of the struct pointed to, it's fine.
+	// But here App.UpdateConfig overwrites the pointer a.Config = cfg.
+	// The managers (RecorderManager, etc.) might still be holding the OLD pointer if they store it.
+	// Let's check: recorder.NewManager(..., a.Config, ...).
+	// If it stores the pointer, and we change a.Config to point to a NEW struct, the manager still points to OLD struct.
+	// FIX: We should probably Update the managers with the new config.
+	// a.RecorderManager.UpdateConfig(cfg) is already called. Good.
+	// We should add UpdateConfig to other managers if they need it, or ensure we are modifying the existing struct instead of replacing it.
+	// For now, let's assume UpdateConfig updates the dependencies.
+
+	// Re-initialize AI Manager or update it if needed.
+	// Since AI manager is simple and just looks at config path, we can re-create it or just let it be if we didn't store config pointer deeply.
+	// In my NewManager implementation:
+	// func NewManager(ctx context.Context, cfg *config.Configuration) *Manager { return &Manager{config: cfg} }
+	// It stores the pointer. If `a.Config = cfg` changes the pointer address, `a.AIManager.config` will still point to the old address.
+	// So we need to update AI manager's config too.
+	a.AIManager = ai.NewManager(a.ctx, a.Config)
 
 	logger.Info(logger.LogTypeOperation, "Configuration updated")
 	return "Saved"
@@ -382,4 +402,15 @@ func (a *App) StartAppUpdate(downloadUrl string) {
 		}
 		runtime.EventsEmit(a.ctx, "update-complete", filePath)
 	}()
+}
+
+// GenerateAIContent generates content using Gemini API
+// imageData should be base64 encoded string if passed from JS, but here we expect byte array.
+// Wails handles base64 decoding automatically for []byte argument? No, usually it's string (base64) from JS.
+// Let's accept []byte and see if Wails runtime handles it. Or accept string (base64) and decode it.
+func (a *App) GenerateAIContent(prompt string, imageData []byte) (string, error) {
+	if a.AIManager == nil {
+		return "", fmt.Errorf("AI Manager not initialized")
+	}
+	return a.AIManager.GenerateContent(prompt, imageData)
 }

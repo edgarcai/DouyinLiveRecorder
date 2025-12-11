@@ -7,6 +7,7 @@ import ConfigPanel from './components/ConfigPanel.vue'
 import StatusPanel from './components/StatusPanel.vue'
 import LogPanel from './components/LogPanel.vue'
 import HelpPanel from './components/HelpPanel.vue'
+import VideoEditor from './components/VideoEditor/VideoEditor.vue'
 import TitleBar from './components/TitleBar.vue'
 import FloatingBall from './components/FloatingBall.vue'
 import LoginModal from './components/LoginModal.vue'
@@ -112,6 +113,13 @@ const handleSplashReady = async () => {
               <span class="label">{{ $t('nav.status') }}</span>
             </button>
             <button 
+              :class="['nav-item', {active: currentTab === 'studio'}]" 
+              @click="currentTab = 'studio'"
+            >
+              <span class="icon">✨</span>
+              <span class="label">AI Studio</span>
+            </button>
+            <button 
               :class="['nav-item', {active: currentTab === 'config'}]" 
               @click="currentTab = 'config'"
             >
@@ -149,7 +157,7 @@ const handleSplashReady = async () => {
           <transition name="fade" mode="out-in">
             <keep-alive>
               <component 
-                :is="currentTab === 'status' ? StatusPanel : (currentTab === 'config' ? ConfigPanel : (currentTab === 'logs' ? LogPanel : HelpPanel))" 
+                :is="currentTab === 'status' ? StatusPanel : (currentTab === 'studio' ? VideoEditor : (currentTab === 'config' ? ConfigPanel : (currentTab === 'logs' ? LogPanel : HelpPanel)))" 
                 @toggle-mini="handleMiniModeToggle"
               />
             </keep-alive>

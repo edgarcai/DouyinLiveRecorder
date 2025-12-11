@@ -13,6 +13,8 @@ export function CheckFFmpeg():Promise<boolean>;
 
 export function DownloadFFmpeg():Promise<string>;
 
+export function GenerateAIContent(arg1:string,arg2:Array<number>):Promise<string>;
+
 export function GetConfig():Promise<config.Configuration>;
 
 export function GetFFmpegDownloadProgress():Promise<Record<string, any>>;
